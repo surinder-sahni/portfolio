@@ -4,6 +4,8 @@ window.SITE_CONFIG = {
   FORM_ENDPOINT: '',
   // WhatsApp number in international format, digits only (e.g. '919876543210'). Empty = buttons go to the contact form.
   WHATSAPP_NUMBER: '',
+  // Your Upwork profile URL (e.g. 'https://www.upwork.com/freelancers/~xxxx'). Empty = badge is not a link.
+  UPWORK_URL: '',
   WHATSAPP_TEXT: 'Hi Surinder, I would like a free website audit.'
 };
 // Each project: title, category, niche, cover (top-of-page crop for the card), full (full-page screenshot, ~1000px wide),

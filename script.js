@@ -191,38 +191,32 @@ const setActive = i => { if (i === active || !P[i]) return; active = i;
 const nearest = () => { const c = innerWidth / 2; let best = 0, bd = 1e9;
   slides.forEach((s, i) => { const r = s.getBoundingClientRect(), d = Math.abs(r.left + r.width / 2 - c); if (d < bd) { bd = d; best = i; } }); return best; };
 setActive(0);
-const nativeMode = mobile || reduce;
 let dragMoved = false;
-if (nativeMode) {
+if (reduce) {
   slider.classList.add('native');
   let raf = 0; slider.addEventListener('scroll', () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => setActive(nearest())); }, { passive: true });
 } else {
-  let target = 0, cur = 0, max = 0, lastWheel = 0, drag = null, inView = false;
-  const measure = () => { max = Math.max(0, rail.scrollWidth - innerWidth); target = Math.min(target, max); };
-  measure(); addEventListener('resize', measure); addEventListener('load', measure);
-  slider.addEventListener('mousemove', e => {
-    if (drag || performance.now() - lastWheel < 900) return;
-    const p = gsap.utils.clamp(0, 1, (e.clientX - innerWidth * 0.12) / (innerWidth * 0.76)); // edges = start/end
-    target = p * max;
-  });
-  slider.addEventListener('wheel', e => { if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) { e.preventDefault(); target = gsap.utils.clamp(0, max, target + e.deltaX * 1.3); lastWheel = performance.now(); } }, { passive: false });
-  slider.addEventListener('pointerdown', e => { drag = { x: e.clientX, t: target }; dragMoved = false; slider.classList.add('dragging'); });
-  addEventListener('pointermove', e => { if (!drag) return; const dx = e.clientX - drag.x; if (Math.abs(dx) > 6) dragMoved = true; target = gsap.utils.clamp(0, max, drag.t - dx * 1.4); });
-  addEventListener('pointerup', () => { if (!drag) return; drag = null; slider.classList.remove('dragging'); lastWheel = performance.now(); });
-  ScrollTrigger.create({ trigger: slider, start: 'top bottom', end: 'bottom top', onToggle: st => inView = st.isActive });
+  // pinned: vertical scroll drives the rail; cursor layers an offset + skew/parallax on top (desktop)
+  const pinEl = $('#workPin'), bar = $('#spBar'); pinEl.classList.add('pinmode');
   const imgs = slides.map(s => s.querySelector('img')), setX = gsap.quickSetter(rail, 'x', 'px');
-  let frame = 0;
+  const last = slides[slides.length - 1];
+  const dist = () => Math.max(0, last.offsetLeft + last.offsetWidth / 2 - innerWidth / 2);
+  const st = { x: 0 };
+  gsap.to(st, { x: () => dist(), ease: 'none', scrollTrigger: { trigger: pinEl, start: 'top top', end: () => '+=' + Math.round(dist() * (mobile ? 1.1 : 1.25)), pin: true, scrub: mobile ? 0.6 : 1, anticipatePin: 1, invalidateOnRefresh: true,
+    onToggle: self => $('.floaters').classList.toggle('in-pin', self.isActive), onUpdate: self => { bar.style.transform = `scaleX(${self.progress})`; } } });
+  let mT = 0, mC = 0, prev = 0, frame = 0, inView = false;
+  ScrollTrigger.create({ trigger: pinEl, start: 'top bottom', end: () => '+=' + (innerHeight * 2 + dist() * 1.3), onToggle: s => inView = s.isActive });
+  if (!mobile) pinEl.addEventListener('mousemove', e => { mT = (e.clientX / innerWidth - 0.5) * innerWidth * 0.16; });
+  if (!mobile) pinEl.addEventListener('mouseleave', () => { mT = 0; });
+  addEventListener('load', () => ScrollTrigger.refresh());
   gsap.ticker.add(() => {
-    if (!inView && Math.abs(target - cur) < 0.5) return;
-    const prev = cur; cur += (target - cur) * 0.075;
-    const v = gsap.utils.clamp(-40, 40, cur - prev);
+    if (!inView) return;
+    mC += (mT - mC) * 0.07;
+    const cur = st.x + mC, v = gsap.utils.clamp(-40, 40, cur - prev); prev = cur;
     setX(-cur);
-    const c = innerWidth / 2;
-    slides.forEach((s, i) => {
-      gsap.set(s, { skewX: -v * 0.12, rotate: -v * 0.04 });
-      const r = s.getBoundingClientRect(); const off = (r.left + r.width / 2 - c) / innerWidth;
-      gsap.set(imgs[i], { xPercent: -off * 12 });
-    });
+    if (!mobile) { const c = innerWidth / 2;
+      slides.forEach((s, i) => { gsap.set(s, { skewX: -v * 0.12, rotate: -v * 0.04 });
+        const r = s.getBoundingClientRect(); gsap.set(imgs[i], { xPercent: -((r.left + r.width / 2 - c) / innerWidth) * 8 }); }); }
     if (++frame % 6 === 0) setActive(nearest());
   });
 }
@@ -280,6 +274,10 @@ if (!reduce) {
 }
 
 // ---------- floating buttons hide over contact ----------
+// badge entrance + hide LET'S TALK pill while hero headline is on screen (desktop)
+if (!reduce) gsap.from('.ut-badge', { y: -16, opacity: 0, duration: 1, ease: 'expo.out', delay: 1.1, clearProps: 'opacity,transform' });
+if (!mobile) ScrollTrigger.create({ trigger: '.hero', start: 'top top', end: '45% top', onToggle: st => $('.floaters').classList.toggle('in-hero', st.isActive) });
+const UP = (window.SITE_CONFIG || {}).UPWORK_URL; if (UP) { const bd = $('.ut-badge'); bd.href = UP; bd.target = '_blank'; bd.rel = 'noopener'; }
 ScrollTrigger.create({ trigger: '#contact', start: 'top 70%', end: 'bottom top', onToggle: st => $('.floaters').classList.toggle('hide', st.isActive) });
 
 // ---------- lead form (frontend; set FORM_ENDPOINT in projects.js to go live) ----------
