@@ -12,18 +12,25 @@
 <body class="is-loading">
 <div class="grain" aria-hidden="true"></div>
 <div class="preloader" id="preloader"><div class="pre-name">Surinder Sahni</div><div class="pre-count"><span id="count">0</span></div><div class="pre-bar"><span id="prebar"></span></div></div>
-<div class="cursor" id="cursor"><span></span></div>
+<div class="cursor" id="cursor"><span></span><b>View</b></div>
 
 <header class="nav">
   <a href="#top" class="logo">S<span>.</span>Sahni</a>
-  <nav><a href="#package">Package</a><a href="#services">Services</a><a href="#work">Work</a><a href="#reviews">Reviews</a></nav>
-  <button class="sound" id="sound" aria-pressed="false" aria-label="Toggle sound"><span class="eq"><i></i><i></i><i></i><i></i></span><b id="soundLabel">Sound off</b></button>
+  <nav class="nav-links"><a href="#services">Services</a><a href="#work">Work</a><a href="#reviews">Reviews</a><a href="#contact">Contact</a></nav>
+  <div class="nav-right">
+    <button class="sound" id="sound" aria-pressed="false" aria-label="Toggle sound"><span class="eq"><i></i><i></i><i></i><i></i></span><b class="sound-label">Sound off</b></button>
+    <button class="burger" id="burger" aria-label="Open menu" aria-expanded="false" aria-controls="menu"><span></span><span></span></button>
+  </div>
 </header>
+<div class="menu" id="menu" aria-hidden="true">
+  <nav><a href="#services"><small>01</small>Services</a><a href="#work"><small>02</small>Work</a><a href="#reviews"><small>03</small>Reviews</a><a href="#contact"><small>04</small>Contact</a></nav>
+  <div class="menu-foot"><a href="#contact" class="btn" data-snd><span>Free website audit</span><i>→</i></a><button class="sound sound-m" aria-pressed="false" aria-label="Toggle sound"><span class="eq"><i></i><i></i><i></i><i></i></span><b class="sound-label">Sound off</b></button></div>
+</div>
 
 <main id="top">
 <section class="hero">
   <div class="hero-top">
-    <p class="eyebrow">WordPress · MERN · SEO · PPC — available for 2026</p>
+    <p class="eyebrow">Websites + leads for small businesses</p>
     <figure class="avatar" id="avatar">
       <!-- Lip-sync avatar: put your video at assets/avatar.mp4 and set data-video="on" -->
       <video id="avatarVideo" data-src="assets/avatar.mp4" data-video="off" poster="assets/surinder.jpg" muted loop playsinline preload="none"></video>
@@ -33,49 +40,34 @@
   </div>
   <h1 class="mega split" aria-label="Websites that sell">WEBSITES<br>THAT <em>sell.</em></h1>
   <div class="hero-bottom">
-    <p class="hero-sub">One partner for the whole funnel: a premium, fast website <strong>plus</strong> the SEO and Google Ads that fill it with enquiries.</p>
-    <a href="#contact" class="btn magnetic" data-snd><span>Book a strategy call</span><i>→</i></a>
+    <p class="hero-sub">I design and build WordPress and full-stack websites for small businesses, <strong>then</strong> bring the customers with SEO, Google Ads and proper tracking.</p>
+    <div class="ctas"><a href="#contact" class="btn magnetic" data-snd><span>Get a free website audit</span><i>→</i></a><a href="#work" class="btn btn-ghost magnetic" data-snd><span>See my work</span></a></div>
   </div>
   <div class="scroll-hint">Scroll<span></span></div>
 </section>
 
 <section class="intro">
-  <p class="reveal-text">I'm Surinder — a WordPress & MERN developer who builds sites that <em>look expensive</em> and work even harder: ranking on Google, converting ad clicks, and turning visitors into booked calls.</p>
-</section>
-
-<section class="package" id="package">
-  <div class="package-pin">
-    <div class="package-head"><p class="eyebrow">The package</p><h2 class="h2">Zero to <em>enquiries</em><br>in four moves.</h2></div>
-    <div class="steps">
-      <article class="step"><b>01</b><h3>Build</h3><p>A custom WordPress or React site, designed around one job: turning visitors into leads.</p></article>
-      <article class="step"><b>02</b><h3>Rank</h3><p>Technical SEO, content and local search so customers find you without paying per click.</p></article>
-      <article class="step"><b>03</b><h3>Advertise</h3><p>Targeted Google Ads and PPC campaigns that put you in front of buyers today.</p></article>
-      <article class="step"><b>04</b><h3>Convert</h3><p>Landing pages, tracking and A/B tests so every visit has the best chance to call you.</p></article>
-    </div>
-    <div class="progress"><span></span></div>
-  </div>
+  <p class="reveal-text">I'm Surinder — a WordPress & full-stack developer helping <em>small businesses</em> get a website that looks expensive, ranks on Google, and turns visitors into calls and bookings.</p>
 </section>
 
 <section class="services" id="services">
-  <div class="sec-head"><p class="eyebrow">Services</p><h2 class="h2">Everything under <em>one roof.</em></h2></div>
-  <div class="panels">
-    <article class="panel p1"><div class="panel-in"><span class="pn">01 / 04</span><h3>WORDPRESS</h3><div class="panel-body"><p>Custom themes that are fast, secure and easy for you to edit — from brochure sites to WooCommerce stores.</p><ul><li>Custom design &amp; theme</li><li>Elementor / Gutenberg</li><li>WooCommerce</li><li>Speed &amp; security</li></ul></div></div></article>
-    <article class="panel p2"><div class="panel-in"><span class="pn">02 / 04</span><h3>MERN APPS</h3><div class="panel-body"><p>Dashboards, portals and booking tools built with React, Node, Express and MongoDB.</p><ul><li>React front-ends</li><li>Node / Express APIs</li><li>MongoDB data</li><li>Auth &amp; integrations</li></ul></div></div></article>
-    <article class="panel p3"><div class="panel-in"><span class="pn">03 / 04</span><h3>SEO</h3><div class="panel-body"><p>Rank for the searches your customers actually make, and keep climbing month after month.</p><ul><li>Technical audit</li><li>On-page &amp; content</li><li>Local SEO / GBP</li><li>Monthly reporting</li></ul></div></div></article>
-    <article class="panel p4"><div class="panel-in"><span class="pn">04 / 04</span><h3>PPC</h3><div class="panel-body"><p>Google Ads campaigns engineered for cost-per-lead, not vanity clicks.</p><ul><li>Campaign setup</li><li>Keyword &amp; audience research</li><li>Conversion tracking</li><li>Ongoing optimisation</li></ul></div></div></article>
-  </div>
+  <div class="svc-head"><p class="eyebrow">Services · 07</p><h2 class="h2">Everything a small business <em>needs online.</em></h2><p class="svc-sub">One partner for design, build, traffic and tracking — no juggling agencies.</p><a href="#contact" class="btn magnetic" data-snd><span>Book a free strategy call</span><i>→</i></a></div>
+  <div class="deck"><article class="pcard" style="--i:0"><div class="pcard-in"><div class="pc-top"><span class="pn">01 / 07</span><span class="pc-suit">✦</span></div><h3>WordPress Website Design</h3><p>Custom, fast WordPress sites that look premium and are easy for you to update.</p><ul><li>Custom theme</li><li>Elementor / Gutenberg</li><li>WooCommerce</li><li>Speed &amp; security</li></ul></div></article><article class="pcard" style="--i:1"><div class="pcard-in"><div class="pc-top"><span class="pn">02 / 07</span><span class="pc-suit">✦</span></div><h3>AI to WordPress</h3><p>Turn an AI-generated design or mock-up into a real, working WordPress website.</p><ul><li>AI mock-up → live site</li><li>Clean, editable blocks</li><li>Mobile-perfect</li><li>SEO-ready markup</li></ul></div></article><article class="pcard" style="--i:2"><div class="pcard-in"><div class="pc-top"><span class="pn">03 / 07</span><span class="pc-suit">✦</span></div><h3>Figma to WordPress</h3><p>Pixel-perfect conversion of your Figma designs into a responsive WordPress theme.</p><ul><li>Pixel-perfect build</li><li>Responsive</li><li>Animations</li><li>Reusable sections</li></ul></div></article><article class="pcard" style="--i:3"><div class="pcard-in"><div class="pc-top"><span class="pn">04 / 07</span><span class="pc-suit">✦</span></div><h3>SEO</h3><p>Get found on Google by local customers searching for what you sell.</p><ul><li>Technical audit</li><li>On-page &amp; content</li><li>Local SEO / GBP</li><li>Monthly reports</li></ul></div></article><article class="pcard" style="--i:4"><div class="pcard-in"><div class="pc-top"><span class="pn">05 / 07</span><span class="pc-suit">✦</span></div><h3>PPC</h3><p>Google Ads campaigns built around cost per lead, not vanity clicks.</p><ul><li>Campaign setup</li><li>Keyword research</li><li>Landing pages</li><li>Ongoing optimisation</li></ul></div></article><article class="pcard" style="--i:5"><div class="pcard-in"><div class="pc-top"><span class="pn">06 / 07</span><span class="pc-suit">✦</span></div><h3>GA Tracking</h3><p>Know exactly where your leads come from with Google Analytics and conversion tracking.</p><ul><li>GA4 setup</li><li>Google Tag Manager</li><li>Conversion &amp; call tracking</li><li>Clear dashboards</li></ul></div></article><article class="pcard" style="--i:6"><div class="pcard-in"><div class="pc-top"><span class="pn">07 / 07</span><span class="pc-suit">✦</span></div><h3>Full Stack Development</h3><p>Custom web apps, portals and booking systems built with the MERN stack.</p><ul><li>React front-ends</li><li>Node / Express APIs</li><li>MongoDB</li><li>Auth &amp; integrations</li></ul></div></article></div>
+</section>
+
+<section class="mask" id="mask">
+  <h2 class="mask-type" aria-label="Built to convert"><span>BUILT</span><span>TO CONVERT</span></h2>
+  <div class="mask-reveal"><img src="assets/projects/p03.svg" alt="Placeholder project preview" loading="lazy"></div>
+  <p class="mask-cap">Design, development and marketing under one roof.</p>
 </section>
 
 <section class="work" id="work">
   <div class="sec-head"><p class="eyebrow">Selected work <span class="tag">placeholder projects</span></p><h2 class="h2">Recent <em>launches.</em></h2></div>
-  <ul class="work-list">
-    <li data-g="1" data-snd><span>Project One</span><small>WordPress · SEO</small><i>2026</i></li>
-    <li data-g="2" data-snd><span>Project Two</span><small>MERN · Dashboard</small><i>2026</i></li>
-    <li data-g="3" data-snd><span>Project Three</span><small>WooCommerce · PPC</small><i>2025</i></li>
-    <li data-g="4" data-snd><span>Project Four</span><small>Landing page · Ads</small><i>2025</i></li>
-  </ul>
-  <div class="work-preview" id="preview"><div class="pv g1"></div><div class="pv g2"></div><div class="pv g3"></div><div class="pv g4"></div><p>Placeholder preview</p></div>
+  <div class="filters" id="filters" role="tablist"></div>
+  <div class="gallery" id="gallery"></div>
+  <div class="cta-band"><p>Want results like these for your business?</p><a href="#contact" class="btn magnetic" data-snd><span>Get a free website audit</span><i>→</i></a></div>
 </section>
+<div class="lightbox" id="lightbox" aria-hidden="true" role="dialog" aria-label="Project preview"><button class="lb-close" aria-label="Close">×</button><button class="lb-prev" aria-label="Previous">←</button><figure><img id="lbImg" alt=""><figcaption id="lbCap"></figcaption></figure><button class="lb-next" aria-label="Next">→</button></div>
 
 <section class="results">
   <div class="sec-head"><p class="eyebrow">Results <span class="tag">example numbers</span></p></div>
@@ -99,30 +91,36 @@
     <article class="rv"><b class="rv-n">3</b><div class="rv-main"><p>“Placeholder review: we went from page five to the top three on Google.”</p><div class="who"><span class="av">CN</span><div><strong>Client Name</strong><small>Director, Business (placeholder)</small></div></div></div></article>
     <article class="rv"><b class="rv-n">4</b><div class="rv-main"><p>“Placeholder review: our ad cost per lead halved in two months.”</p><div class="who"><span class="av">CN</span><div><strong>Client Name</strong><small>Marketing lead, Business (placeholder)</small></div></div></div></article>
   </div>
+  <div class="cta-band"><p>Your business could be the next review.</p><a href="#contact" class="btn magnetic" data-snd><span>Book a free strategy call</span><i>→</i></a></div>
 </section>
+
 
 <section class="contact" id="contact">
   <h2 class="big-cta"><span>LET'S GET YOU</span><span><em>more clients.</em></span></h2>
   <div class="contact-grid">
-    <p class="contact-copy">Tell me about your business. I'll reply within one working day with a plan for your website and lead generation.</p>
+    <div class="contact-copy"><p>Tell me about your business. I'll reply within one working day with a free audit and a plan for your website and leads.</p><a class="wa-inline" href="#" data-wa>WhatsApp me</a></div>
     <form class="lead" id="lead" novalidate>
-      <label>Name<input name="name" required></label>
-      <label>Email<input type="email" name="email" required></label>
-      <label>Business<input name="business"></label>
-      <label>Budget<select name="budget"><option>Under $1k</option><option>$1k – $3k</option><option>$3k – $7k</option><option>$7k+ (premium)</option></select></label>
-      <label class="full">Message<textarea name="message" rows="3"></textarea></label>
+      <label>Name*<input name="name" required autocomplete="name"></label>
+      <label>Email*<input type="email" name="email" required autocomplete="email"></label>
+      <label>Phone<input type="tel" name="phone" autocomplete="tel"></label>
+      <label>Business name<input name="business" autocomplete="organization"></label>
+      <fieldset class="full chips"><legend>Services you need</legend><label class="chip"><input type="checkbox" name="services" value="WordPress Website Design"><span>WordPress Website Design</span></label><label class="chip"><input type="checkbox" name="services" value="AI to WordPress"><span>AI to WordPress</span></label><label class="chip"><input type="checkbox" name="services" value="Figma to WordPress"><span>Figma to WordPress</span></label><label class="chip"><input type="checkbox" name="services" value="SEO"><span>SEO</span></label><label class="chip"><input type="checkbox" name="services" value="PPC"><span>PPC</span></label><label class="chip"><input type="checkbox" name="services" value="GA Tracking"><span>GA Tracking</span></label><label class="chip"><input type="checkbox" name="services" value="Full Stack Development"><span>Full Stack Development</span></label></fieldset>
+      <label class="full">Budget<select name="budget"><option>Under $1k</option><option>$1k – $3k</option><option>$3k – $7k</option><option>$7k+ (premium)</option></select></label>
+      <label class="full">Message<textarea name="message" rows="4"></textarea></label>
       <button type="submit" class="btn magnetic" data-snd><span>Send enquiry</span><i>→</i></button>
-      <p class="form-note" id="note">Prototype form — nothing is sent.</p>
+      <p class="form-note" id="note" aria-live="polite">Prototype form — nothing is sent yet.</p>
     </form>
+    <div class="success" id="success" hidden><h3>Thank you!</h3><p>Your enquiry is in. I'll get back to you within one working day.</p></div>
   </div>
-  <footer><span>© 2026 Surinder Sahni</span><span>WordPress · MERN · SEO · PPC</span></footer>
+  <footer><span>© 2026 Surinder Sahni</span><span>WordPress · Full Stack · SEO · PPC</span></footer>
 </section>
 </main>
 
-<a href="#contact" class="talk magnetic" id="talk" data-snd><img class="talk-av" src="assets/surinder-face.jpg" alt="" width="40" height="40"><span>LET'S TALK</span></a>
+<div class="floaters"><a href="#contact" class="talk magnetic" id="talk" data-snd><img class="talk-av" src="assets/surinder-face.jpg" alt="" width="40" height="40"><span>LET'S TALK</span></a><a href="#" class="wa" data-wa aria-label="WhatsApp (placeholder)"><svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .1-1.3c0-.1-.2-.2-.5-.3z"/></svg></a></div>
 
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+<script src="projects.js"></script>
 <script src="script.js"></script>
 </body></html>
