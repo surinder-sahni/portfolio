@@ -170,15 +170,7 @@ const stackFx = (sel, inner, scaleTo, dimTo) => {
 stackFx('.pcard', '.pcard-in', 0.92, 0.35);
 stackFx('.rv', null, 0.92, 0.4);
 
-// ---------- image-mask moment ----------
-if (!reduce) {
-  gsap.fromTo('.mask-type', { backgroundPosition: '50% 0%' }, { backgroundPosition: '50% 100%', ease: 'none', scrollTrigger: { trigger: '.mask', start: 'top bottom', end: 'bottom top', scrub: true } });
-  gsap.from('.mask-type span', { yPercent: 60, opacity: 0, stagger: 0.15, duration: 1.2, ease: 'expo.out', scrollTrigger: { trigger: '.mask-type', start: 'top 80%' } });
-  gsap.fromTo('.mask-reveal', { clipPath: 'inset(30% 35% 30% 35% round 200px)' }, { clipPath: 'inset(0% 0% 0% 0% round 26px)', ease: 'none', scrollTrigger: { trigger: '.mask-reveal', start: 'top 90%', end: 'center 55%', scrub: true } });
-  gsap.fromTo('.mask-reveal img', { yPercent: -10 }, { yPercent: 0, ease: 'none', scrollTrigger: { trigger: '.mask-reveal', start: 'top bottom', end: 'bottom top', scrub: true } });
-}
-
-// ---------- projects: cursor-driven horizontal slider (data from projects.js) ----------
+// ---------- projects: scroll-pinned horizontal slider + cursor layer (data from projects.js) ----------
 const P = window.PROJECTS || [], slider = $('#slider'), rail = $('#rail');
 const sizes = ['l', 's', 'm', 'l', 'm', 's'];
 rail.innerHTML = P.map((p, i) => `<figure class="slide sz-${['l','m','s'].includes(p.size) ? p.size : sizes[i % sizes.length]}" data-i="${i}" tabindex="0" role="button" aria-label="Open ${p.title}"><div class="sw"><img src="${p.cover || p.full}" data-full="${p.full || ''}" alt="${p.title} website" loading="lazy" draggable="false"></div><figcaption><small>${String(i + 1).padStart(2, '0')}</small><span>${p.niche || p.category}</span></figcaption></figure>`).join('');
@@ -196,9 +188,9 @@ if (reduce) {
   slider.classList.add('native');
   let raf = 0; slider.addEventListener('scroll', () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => setActive(nearest())); }, { passive: true });
 } else {
-  // pinned: vertical scroll drives the rail; cursor layers an offset + skew/parallax on top (desktop)
+  // pinned: vertical scroll drives the rail; cursor layers an offset + skew on top (desktop)
   const pinEl = $('#workPin'), bar = $('#spBar'); pinEl.classList.add('pinmode');
-  const imgs = slides.map(s => s.querySelector('img')), setX = gsap.quickSetter(rail, 'x', 'px');
+  const setX = gsap.quickSetter(rail, 'x', 'px');
   const last = slides[slides.length - 1];
   const dist = () => Math.max(0, last.offsetLeft + last.offsetWidth / 2 - innerWidth / 2);
   const st = { x: 0 };
@@ -212,18 +204,17 @@ if (reduce) {
   gsap.ticker.add(() => {
     if (!inView) return;
     mC += (mT - mC) * 0.07;
-    const cur = st.x + mC, v = gsap.utils.clamp(-40, 40, cur - prev); prev = cur;
+    // keep the cursor offset from pushing the first/last card past the screen edge
+    const D = dist(), cur = gsap.utils.clamp(-innerWidth * 0.04, D + innerWidth * 0.04, st.x + mC), v = gsap.utils.clamp(-40, 40, cur - prev); prev = cur;
     setX(-cur);
-    if (!mobile) { const c = innerWidth / 2;
-      slides.forEach((s, i) => { gsap.set(s, { skewX: -v * 0.12, rotate: -v * 0.04 });
-        const r = s.getBoundingClientRect(); gsap.set(imgs[i], { xPercent: -((r.left + r.width / 2 - c) / innerWidth) * 8 }); }); }
+    if (!mobile) slides.forEach(s => gsap.set(s, { skewX: -v * 0.12, rotate: -v * 0.04 }));
     if (++frame % 6 === 0) setActive(nearest());
   });
 }
 // hover: scroll through the full-page screenshot like a live preview (transform only)
 if (!mobile && !reduce) slides.forEach(s => {
   const img = s.querySelector('img'); let tw = null;
-  const go = () => { const d = Math.max(0, img.getBoundingClientRect().height / (gsap.getProperty(img, 'scale') || 1) - s.clientHeight);
+  const go = () => { const d = Math.max(0, img.getBoundingClientRect().height - s.clientHeight);
     tw && tw.kill(); tw = gsap.to(img, { y: -d, duration: Math.max(2, d / 260), ease: 'power1.inOut' }); };
   s.addEventListener('mouseenter', () => {
     if (img.dataset.full && img.src.indexOf(img.dataset.full) < 0) { const n = new Image(); n.onload = () => { img.src = img.dataset.full; requestAnimationFrame(go); }; n.src = img.dataset.full; }
@@ -243,13 +234,34 @@ slides.forEach(t => { const open = () => { showLb(+t.dataset.i); lb.classList.ad
   t.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } }); });
 $('.lb-close').addEventListener('click', closeLb); $('.lb-prev').addEventListener('click', () => step(-1)); $('.lb-next').addEventListener('click', () => step(1));
 lb.addEventListener('click', e => { if (e.target === lb) closeLb(); });
-addEventListener('keydown', e => { if (!lb.classList.contains('open')) return; if (e.key === 'ArrowRight') step(1); if (e.key === 'ArrowLeft') step(-1); });
+addEventListener('keydown', e => { if (!lb.classList.contains('open')) return; if (e.key === 'Escape') closeLb(); if (e.key === 'ArrowRight') step(1); if (e.key === 'ArrowLeft') step(-1); });
 const cursorEl = $('#cursor');
 if (cursorEl) slides.forEach(t => { t.addEventListener('mouseenter', () => cursorEl.classList.add('view')); t.addEventListener('mouseleave', () => cursorEl.classList.remove('view')); });
 
-// ---------- reveals ----------
+// ---------- section reveals ----------
 if (!reduce) $$('.sec-head, .svc-head > *, .big-cta span, .stats > div, .contact-copy, .cta-band').forEach(el =>
-  gsap.from(el, { y: 60, opacity: 0, duration: 1.1, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 92%', once: true } }));
+  gsap.from(el, { y: 50, opacity: 0, duration: 1.1, ease: 'expo.out', scrollTrigger: { trigger: el, start: 'top 88%', once: true } }));
+
+// ---------- lead growth simulator ----------
+{
+  const g = id => document.getElementById(id), fmt = n => Math.round(n).toLocaleString('en-US');
+  const out = { leads: 0, cur: 0, nw: 0, rev: 0 };
+  const calc = () => {
+    const vis = +g('sVis').value, cr = +g('sCur').value, nr = Math.max(+g('sNew').value, cr), val = +g('sVal').value;
+    g('vVis').textContent = fmt(vis); g('vCur').textContent = cr.toFixed(1) + '%'; g('vNew').textContent = (+g('sNew').value).toFixed(1) + '%'; g('vVal').textContent = '$' + fmt(val);
+    const cur = vis * cr / 100, nw = vis * nr / 100, max = Math.max(nw, 1);
+    gsap.to(out, { leads: nw - cur, cur, nw, rev: (nw - cur) * 12 * 0.1 * val, duration: reduce ? 0 : 0.8, ease: 'power3.out', overwrite: true,
+      onUpdate: () => { g('oLeads').textContent = fmt(out.leads); g('oCur').textContent = fmt(out.cur); g('oNew').textContent = fmt(out.nw); g('oRev').textContent = '$' + fmt(out.rev); } });
+    gsap.to('#bCur', { scaleX: cur / max, duration: reduce ? 0 : 0.8, ease: 'power3.out', overwrite: true });
+    gsap.to('#bNew', { scaleX: nw / max, duration: reduce ? 0 : 0.8, ease: 'power3.out', overwrite: true });
+    $$('.rng input').forEach(r => r.style.setProperty('--p', ((r.value - r.min) / (r.max - r.min) * 100) + '%'));
+  };
+  $$('.rng input').forEach(r => { r.addEventListener('input', calc); r.addEventListener('change', () => blip(660, 0.08, 0.03)); });
+  calc();
+  const card = g('simCard');
+  if (!mobile && !reduce) card.addEventListener('pointermove', e => { const r = card.getBoundingClientRect(); card.style.setProperty('--mx', (e.clientX - r.left) + 'px'); card.style.setProperty('--my', (e.clientY - r.top) + 'px'); });
+  if (!reduce) gsap.from('.sim-card', { y: 80, opacity: 0, duration: 1.2, ease: 'expo.out', scrollTrigger: { trigger: '.sim', start: 'top 80%', once: true } });
+}
 
 // ---------- count-up ----------
 $$('.cnt').forEach(el => {
