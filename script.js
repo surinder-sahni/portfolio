@@ -178,43 +178,80 @@ if (!reduce) {
   gsap.fromTo('.mask-reveal img', { yPercent: -10 }, { yPercent: 0, ease: 'none', scrollTrigger: { trigger: '.mask-reveal', start: 'top bottom', end: 'bottom top', scrub: true } });
 }
 
-// ---------- projects gallery (data from projects.js) ----------
-const P = window.PROJECTS || [], gal = $('#gallery'), fil = $('#filters');
-const cats = ['All', ...new Set(P.map(p => p.category))];
-fil.innerHTML = cats.map((c, i) => `<button role="tab" class="${i ? '' : 'on'}" data-c="${c}">${c}<sup>${c === 'All' ? P.length : P.filter(p => p.category === c).length}</sup></button>`).join('');
-gal.innerHTML = P.map((p, i) => `<figure class="tile ${p.size || ''}" data-i="${i}" data-c="${p.category}" tabindex="0" role="button" aria-label="Open ${p.title}"><div class="tw"><img src="${p.image}" alt="${p.title}" loading="lazy"></div><figcaption><span>${p.title}</span><small>${p.category}</small></figcaption></figure>`).join('');
-const tiles = $$('.tile');
-const revealTiles = () => {
-  if (reduce) return;
-  tiles.filter(t => !t.classList.contains('hidden')).forEach((t, k) => {
-    if (t._rv) return; t._rv = 1;
-    gsap.fromTo(t, { clipPath: 'inset(100% 0% 0% 0% round 26px)' }, { clipPath: 'inset(0% 0% 0% 0% round 26px)', duration: 1.2, ease: 'expo.out', delay: (k % 3) * 0.08, scrollTrigger: { trigger: t, start: 'top 92%' } });
-    gsap.fromTo(t.querySelector('.tw'), { yPercent: -6 }, { yPercent: 6, ease: 'none', scrollTrigger: { trigger: t, start: 'top bottom', end: 'bottom top', scrub: true } });
+// ---------- projects: cursor-driven horizontal slider (data from projects.js) ----------
+const P = window.PROJECTS || [], slider = $('#slider'), rail = $('#rail');
+const sizes = ['l', 's', 'm', 'l', 'm', 's'];
+rail.innerHTML = P.map((p, i) => `<figure class="slide sz-${['l','m','s'].includes(p.size) ? p.size : sizes[i % sizes.length]}" data-i="${i}" tabindex="0" role="button" aria-label="Open ${p.title}"><div class="sw"><img src="${p.cover || p.full}" data-full="${p.full || ''}" alt="${p.title} website" loading="lazy" draggable="false"></div><figcaption><small>${String(i + 1).padStart(2, '0')}</small><span>${p.niche || p.category}</span></figcaption></figure>`).join('');
+const slides = $$('.slide'), pad2 = n => String(n).padStart(2, '0');
+$('#smTot').textContent = pad2(P.length);
+let active = -1;
+const setActive = i => { if (i === active || !P[i]) return; active = i;
+  $('#smNum').textContent = pad2(i + 1); $('#smTitle').textContent = P[i].title; $('#smCat').textContent = P[i].category + (P[i].niche ? ' · ' + P[i].niche : '');
+  if (!reduce) gsap.fromTo('.sm-title', { yPercent: 30, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.5, ease: 'expo.out', overwrite: true }); };
+const nearest = () => { const c = innerWidth / 2; let best = 0, bd = 1e9;
+  slides.forEach((s, i) => { const r = s.getBoundingClientRect(), d = Math.abs(r.left + r.width / 2 - c); if (d < bd) { bd = d; best = i; } }); return best; };
+setActive(0);
+const nativeMode = mobile || reduce;
+let dragMoved = false;
+if (nativeMode) {
+  slider.classList.add('native');
+  let raf = 0; slider.addEventListener('scroll', () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => setActive(nearest())); }, { passive: true });
+} else {
+  let target = 0, cur = 0, max = 0, lastWheel = 0, drag = null, inView = false;
+  const measure = () => { max = Math.max(0, rail.scrollWidth - innerWidth); target = Math.min(target, max); };
+  measure(); addEventListener('resize', measure); addEventListener('load', measure);
+  slider.addEventListener('mousemove', e => {
+    if (drag || performance.now() - lastWheel < 900) return;
+    const p = gsap.utils.clamp(0, 1, (e.clientX - innerWidth * 0.12) / (innerWidth * 0.76)); // edges = start/end
+    target = p * max;
   });
-};
-revealTiles();
-fil.addEventListener('click', e => {
-  const b = e.target.closest('button'); if (!b) return;
-  $$('#filters button').forEach(x => x.classList.toggle('on', x === b)); blip(900, 0.05, 0.03);
-  const c = b.dataset.c, show = tiles.filter(t => c === 'All' || t.dataset.c === c);
-  tiles.forEach(t => t.classList.toggle('hidden', !show.includes(t)));
-  if (!reduce) gsap.fromTo(show, { opacity: 0, y: 40, clipPath: 'inset(0% 0% 0% 0% round 26px)' }, { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out', stagger: 0.05 });
-  ScrollTrigger.refresh();
+  slider.addEventListener('wheel', e => { if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) { e.preventDefault(); target = gsap.utils.clamp(0, max, target + e.deltaX * 1.3); lastWheel = performance.now(); } }, { passive: false });
+  slider.addEventListener('pointerdown', e => { drag = { x: e.clientX, t: target }; dragMoved = false; slider.classList.add('dragging'); });
+  addEventListener('pointermove', e => { if (!drag) return; const dx = e.clientX - drag.x; if (Math.abs(dx) > 6) dragMoved = true; target = gsap.utils.clamp(0, max, drag.t - dx * 1.4); });
+  addEventListener('pointerup', () => { if (!drag) return; drag = null; slider.classList.remove('dragging'); lastWheel = performance.now(); });
+  ScrollTrigger.create({ trigger: slider, start: 'top bottom', end: 'bottom top', onToggle: st => inView = st.isActive });
+  const imgs = slides.map(s => s.querySelector('img')), setX = gsap.quickSetter(rail, 'x', 'px');
+  let frame = 0;
+  gsap.ticker.add(() => {
+    if (!inView && Math.abs(target - cur) < 0.5) return;
+    const prev = cur; cur += (target - cur) * 0.075;
+    const v = gsap.utils.clamp(-40, 40, cur - prev);
+    setX(-cur);
+    const c = innerWidth / 2;
+    slides.forEach((s, i) => {
+      gsap.set(s, { skewX: -v * 0.12, rotate: -v * 0.04 });
+      const r = s.getBoundingClientRect(); const off = (r.left + r.width / 2 - c) / innerWidth;
+      gsap.set(imgs[i], { xPercent: -off * 12 });
+    });
+    if (++frame % 6 === 0) setActive(nearest());
+  });
+}
+// hover: scroll through the full-page screenshot like a live preview (transform only)
+if (!mobile && !reduce) slides.forEach(s => {
+  const img = s.querySelector('img'); let tw = null;
+  const go = () => { const d = Math.max(0, img.getBoundingClientRect().height / (gsap.getProperty(img, 'scale') || 1) - s.clientHeight);
+    tw && tw.kill(); tw = gsap.to(img, { y: -d, duration: Math.max(2, d / 260), ease: 'power1.inOut' }); };
+  s.addEventListener('mouseenter', () => {
+    if (img.dataset.full && img.src.indexOf(img.dataset.full) < 0) { const n = new Image(); n.onload = () => { img.src = img.dataset.full; requestAnimationFrame(go); }; n.src = img.dataset.full; }
+    else go();
+  });
+  s.addEventListener('mouseleave', () => { tw && tw.kill(); tw = gsap.to(img, { y: 0, duration: 1.2, ease: 'power3.out' }); });
 });
+// entrance: clip-path reveal
+if (!reduce) gsap.fromTo(slides, { clipPath: 'inset(100% 0% 0% 0% round 22px)' }, { clipPath: 'inset(0% 0% 0% 0% round 22px)', duration: 1.3, ease: 'expo.out', stagger: 0.08, scrollTrigger: { trigger: slider, start: 'top 85%', once: true } });
 // lightbox
-const lb = $('#lightbox'); let cur = 0;
-const visible = () => tiles.filter(t => !t.classList.contains('hidden')).map(t => +t.dataset.i);
-const showLb = i => { cur = i; const p = P[i]; $('#lbImg').src = p.image; $('#lbImg').alt = p.title; $('#lbCap').innerHTML = `<span>${p.title} · ${p.category}</span>` + (p.link ? `<a href="${p.link}" target="_blank" rel="noopener">Visit site ↗</a>` : ''); };
+const lb = $('#lightbox'); let lbi = 0;
+const showLb = i => { lbi = i; const p = P[i]; $('#lbImg').src = p.full || p.cover; $('.lb-scroll').scrollTop = 0; $('#lbImg').alt = p.title; $('#lbCap').innerHTML = `<span>${p.title} · ${p.category}</span>` + (p.link ? `<a href="${p.link}" target="_blank" rel="noopener">Visit site ↗</a>` : ''); };
 function closeLb() { if (!lb.classList.contains('open')) return; lb.classList.remove('open'); lb.setAttribute('aria-hidden', 'true'); lenis && lenis.start(); }
-const step = d => { const v = visible(); showLb(v[(v.indexOf(cur) + d + v.length) % v.length]); };
-tiles.forEach(t => { const open = () => { showLb(+t.dataset.i); lb.classList.add('open'); lb.setAttribute('aria-hidden', 'false'); lenis && lenis.stop(); blip(520, 0.12, 0.05); };
-  t.addEventListener('click', open); t.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } }); });
+const step = d => showLb((lbi + d + P.length) % P.length);
+slides.forEach(t => { const open = () => { showLb(+t.dataset.i); lb.classList.add('open'); lb.setAttribute('aria-hidden', 'false'); lenis && lenis.stop(); blip(520, 0.12, 0.05); };
+  t.addEventListener('click', () => { if (dragMoved) { dragMoved = false; return; } open(); });
+  t.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } }); });
 $('.lb-close').addEventListener('click', closeLb); $('.lb-prev').addEventListener('click', () => step(-1)); $('.lb-next').addEventListener('click', () => step(1));
 lb.addEventListener('click', e => { if (e.target === lb) closeLb(); });
 addEventListener('keydown', e => { if (!lb.classList.contains('open')) return; if (e.key === 'ArrowRight') step(1); if (e.key === 'ArrowLeft') step(-1); });
-// cursor "View" label on tiles
 const cursorEl = $('#cursor');
-if (cursorEl) tiles.forEach(t => { t.addEventListener('mouseenter', () => cursorEl.classList.add('view')); t.addEventListener('mouseleave', () => cursorEl.classList.remove('view')); });
+if (cursorEl) slides.forEach(t => { t.addEventListener('mouseenter', () => cursorEl.classList.add('view')); t.addEventListener('mouseleave', () => cursorEl.classList.remove('view')); });
 
 // ---------- reveals ----------
 if (!reduce) $$('.sec-head, .svc-head > *, .big-cta span, .stats > div, .contact-copy, .cta-band').forEach(el =>

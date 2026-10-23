@@ -6,15 +6,12 @@ window.SITE_CONFIG = {
   WHATSAPP_NUMBER: '',
   WHATSAPP_TEXT: 'Hi Surinder, I would like a free website audit.'
 };
-// category must be one of: 'WordPress', 'Figma to WP', 'Full Stack', 'SEO/PPC'
-// size: '' (normal), 'tall' or 'wide' changes the tile shape in the grid.
+// Each project: title, category, niche, cover (top-of-page crop for the card), full (full-page screenshot, ~1000px wide),
+// link (optional live URL), size: 'l' | 'm' | 's' (card width, for rhythm). See assets/README.md.
 window.PROJECTS = [
-  { title: 'Bakery Website (placeholder)',        category: 'WordPress',   image: 'assets/projects/p01.svg', link: '', size: 'wide' },
-  { title: 'Clinic Booking App (placeholder)',    category: 'Full Stack',  image: 'assets/projects/p02.svg', link: '', size: 'tall' },
-  { title: 'Agency Landing Page (placeholder)',   category: 'Figma to WP', image: 'assets/projects/p03.svg', link: '' },
-  { title: 'Local Plumber SEO (placeholder)',     category: 'SEO/PPC',     image: 'assets/projects/p04.svg', link: '' },
-  { title: 'Fashion Store (placeholder)',         category: 'WordPress',   image: 'assets/projects/p05.svg', link: '', size: 'tall' },
-  { title: 'Real Estate Portal (placeholder)',    category: 'Full Stack',  image: 'assets/projects/p06.svg', link: '' },
-  { title: 'Restaurant Site (placeholder)',       category: 'Figma to WP', image: 'assets/projects/p07.svg', link: '', size: 'wide' },
-  { title: 'Dental Ads Campaign (placeholder)',   category: 'SEO/PPC',     image: 'assets/projects/p08.svg', link: '' }
+  { title: 'Concierge Medicine',          category: 'WordPress Website Design', niche: 'Medical',      cover: 'assets/projects/concierge-medicine-cover.jpg',  full: 'assets/projects/concierge-medicine-full.jpg',  link: '', size: 'l' },
+  { title: 'Classy Construction Group',   category: 'WordPress Website Design', niche: 'Construction', cover: 'assets/projects/classy-construction-cover.jpg', full: 'assets/projects/classy-construction-full.jpg', link: '', size: 'm' },
+  { title: 'Physician Weight Loss',       category: 'WordPress Website Design', niche: 'Medical',      cover: 'assets/projects/weight-loss-cover.jpg',         full: 'assets/projects/weight-loss-full.jpg',         link: '', size: 'l' },
+  { title: 'Mental Wellness Practice',    category: 'WordPress Website Design', niche: 'Medical',      cover: 'assets/projects/mental-wellness-cover.jpg',     full: 'assets/projects/mental-wellness-full.jpg',     link: '', size: 's' },
+  { title: 'Marianne Talkovski Coaching', category: 'WordPress Website Design', niche: 'Coaching',     cover: 'assets/projects/talkovski-coaching-cover.jpg',  full: 'assets/projects/talkovski-coaching-full.jpg',  link: '', size: 'l' }
 ];
