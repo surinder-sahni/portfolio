@@ -11,19 +11,19 @@
 </head>
 <body class="is-loading">
 <div class="grain" aria-hidden="true"></div>
-<div class="preloader" id="preloader"><div class="pre-name">Surinder Sahni</div><div class="pre-count"><span id="count">0</span></div><div class="pre-bar"><span id="prebar"></span></div></div>
+<div class="preloader" id="preloader"><div class="pre-name">Surinder Sahni</div><div class="pre-count"><span id="count">0</span></div><div class="pre-bar"><span id="prebar"></span></div><div class="gate" id="gate" hidden><p class="gate-q">This site has a voice intro &amp; a soft lo-fi score.</p><div class="gate-b"><button type="button" class="btn" id="gateOn"><span class="eq on"><i></i><i></i><i></i><i></i></span><span>Enter with sound</span></button><button type="button" class="btn btn-ghost" id="gateOff"><span>Enter quietly</span></button></div><small>You can switch sound anytime, top right.</small></div></div>
 <div class="cursor" id="cursor"><span></span><b>View</b></div>
 
 <header class="nav">
   <a href="#top" class="logo">S<span>.</span>Sahni</a>
-  <nav class="nav-links"><a href="#services">Services</a><a href="#work">Work</a><a href="#reviews">Reviews</a><a href="#contact">Contact</a></nav>
+  <nav class="nav-links"><a href="#about">About</a><a href="#services">Services</a><a href="#skills">Skills</a><a href="#work">Work</a><a href="#reviews">Reviews</a><a href="#contact">Contact</a></nav>
   <div class="nav-right">
     <button class="sound" id="sound" aria-pressed="false" aria-label="Toggle sound"><span class="eq"><i></i><i></i><i></i><i></i></span><b class="sound-label">Sound off</b></button>
     <button class="burger" id="burger" aria-label="Open menu" aria-expanded="false" aria-controls="menu"><span></span><span></span></button>
   </div>
 </header>
 <div class="menu" id="menu" aria-hidden="true">
-  <nav><a href="#services"><small>01</small>Services</a><a href="#work"><small>02</small>Work</a><a href="#reviews"><small>03</small>Reviews</a><a href="#contact"><small>04</small>Contact</a></nav>
+  <nav><a href="#about"><small>01</small>About</a><a href="#services"><small>02</small>Services</a><a href="#skills"><small>03</small>Skills</a><a href="#work"><small>04</small>Work</a><a href="#reviews"><small>05</small>Reviews</a><a href="#contact"><small>06</small>Contact</a></nav>
   <div class="menu-foot"><a href="#contact" class="btn" data-snd><span>Free website audit</span><i>→</i></a><button class="sound sound-m" aria-pressed="false" aria-label="Toggle sound"><span class="eq"><i></i><i></i><i></i><i></i></span><b class="sound-label">Sound off</b></button></div>
 </div>
 
@@ -32,8 +32,8 @@
   <div class="hero-top">
     <p class="eyebrow">Websites + leads for small businesses</p>
     <figure class="avatar" id="avatar">
-      <!-- Lip-sync avatar: put your video at assets/avatar.mp4 and set data-video="on" -->
-      <video id="avatarVideo" data-src="assets/avatar.mp4" data-video="off" poster="assets/surinder.jpg" muted loop playsinline preload="none"></video>
+      <!-- Talking hero: drop a portrait video at assets/hero-talk.mp4 and it replaces the photo automatically -->
+      <video id="avatarVideo" data-src="assets/hero-talk.mp4" poster="assets/surinder.jpg" muted loop playsinline preload="none"></video>
       <div class="avatar-ph ph-wrap"><img src="assets/surinder.jpg" alt="Surinder Sahni" width="1200" height="1800"></div>
       <figcaption><i></i>Say hello</figcaption>
     </figure>
@@ -50,9 +50,59 @@
   <p class="reveal-text">I'm Surinder — a WordPress & full-stack developer helping <em>small businesses</em> get a website that looks expensive, ranks on Google, and turns visitors into calls and bookings.</p>
 </section>
 
+<section class="about" id="about">
+  <div class="about-copy">
+    <p class="eyebrow">About me</p>
+    <h2 class="h2">Hi, I'm <em>Surinder.</em></h2>
+    <p class="about-p" data-anim="fade-up">A WordPress &amp; full-stack developer and Top Rated freelancer on Upwork. I build fast, good-looking websites for small businesses, then set up the SEO, ads and tracking that turn them into a steady source of enquiries.</p>
+    <ul class="about-facts" data-anim="fade-up" data-delay="0.1"><li><b>100%</b>Job Success</li><li><b>55</b>Upwork jobs</li><li><b>5.0★</b>43 reviews</li></ul>
+    <p class="about-hint" data-anim="fade">Drag the card to swing it · tap to flip</p>
+  </div>
+  <div class="idc-stage" id="idcStage">
+    <canvas class="idc-strap" id="idcStrap" aria-hidden="true"></canvas>
+    <div class="idc-pend" id="idcPend">
+      <div class="idc-card" id="idcCard" role="button" tabindex="0" aria-label="ID card: Surinder Sahni. Press to flip">
+        <span class="idc-clip" aria-hidden="true"><i></i></span>
+        <div class="idc-inner" id="idcInner">
+          <div class="idc-face idc-front">
+            <span class="idc-hole"></span>
+            <div class="idc-top"><span class="idc-logo">S<b>.</b>Sahni</span><span class="idc-tag">Studio pass</span></div>
+            <div class="idc-photo"><img src="assets/surinder-face.jpg" alt="" draggable="false"></div>
+            <strong class="idc-name">SURINDER<br>SAHNI</strong>
+            <span class="idc-role">WordPress &amp; Full Stack Developer</span>
+            <span class="idc-badge"><i></i>Top Rated · Upwork</span>
+            <div class="idc-foot">
+              <div><small>ID No.</small><b>SS-0055-2026</b></div>
+              <svg class="idc-sign" viewBox="0 0 120 40" aria-hidden="true"><path d="M4 28c8-14 14-20 18-18s-6 18-2 18 10-16 14-15-2 12 2 12 8-10 12-10 0 9 4 9 8-8 12-8 2 7 6 7 10-6 16-8M60 32c14-2 34-3 54-6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </div>
+            <div class="idc-barcode" aria-hidden="true"></div>
+          </div>
+          <div class="idc-face idc-back">
+            <span class="idc-hole"></span>
+            <p class="idc-k">What I do</p>
+            <ul class="idc-list"><li>WordPress websites</li><li>Elementor &amp; Divi builds</li><li>Figma / AI to WordPress</li><li>Landing pages &amp; UI/UX</li><li>SEO · PPC · GA4 tracking</li><li>MERN full-stack apps</li></ul>
+            <div class="idc-qr" aria-hidden="true"></div>
+            <a href="#contact" class="idc-cta" data-snd>Let's work together →</a>
+            <small class="idc-fine">If found, please return to a growing business.</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="services" id="services">
   <div class="svc-head"><p class="eyebrow">Services · 07</p><h2 class="h2">Everything a small business <em>needs online.</em></h2><p class="svc-sub" data-anim="fade-up" data-delay="0.15">One partner for design, build, traffic and tracking — no juggling agencies.</p><a href="#contact" class="btn magnetic" data-snd><span>Book a free strategy call</span><i>→</i></a></div>
   <div class="deck"><article class="pcard" style="--i:0"><div class="pcard-in"><div class="pc-top"><span class="pn">01 / 07</span><span class="pc-suit">✦</span></div><h3>WordPress Website Design</h3><p>Custom, fast WordPress sites that look premium and are easy for you to update.</p><ul><li>Custom theme</li><li>Elementor / Gutenberg</li><li>WooCommerce</li><li>Speed &amp; security</li></ul></div></article><article class="pcard" style="--i:1"><div class="pcard-in"><div class="pc-top"><span class="pn">02 / 07</span><span class="pc-suit">✦</span></div><h3>AI to WordPress</h3><p>Turn an AI-generated design or mock-up into a real, working WordPress website.</p><ul><li>AI mock-up → live site</li><li>Clean, editable blocks</li><li>Mobile-perfect</li><li>SEO-ready markup</li></ul></div></article><article class="pcard" style="--i:2"><div class="pcard-in"><div class="pc-top"><span class="pn">03 / 07</span><span class="pc-suit">✦</span></div><h3>Figma to WordPress</h3><p>Pixel-perfect conversion of your Figma designs into a responsive WordPress theme.</p><ul><li>Pixel-perfect build</li><li>Responsive</li><li>Animations</li><li>Reusable sections</li></ul></div></article><article class="pcard" style="--i:3"><div class="pcard-in"><div class="pc-top"><span class="pn">04 / 07</span><span class="pc-suit">✦</span></div><h3>SEO</h3><p>Get found on Google by local customers searching for what you sell.</p><ul><li>Technical audit</li><li>On-page &amp; content</li><li>Local SEO / GBP</li><li>Monthly reports</li></ul></div></article><article class="pcard" style="--i:4"><div class="pcard-in"><div class="pc-top"><span class="pn">05 / 07</span><span class="pc-suit">✦</span></div><h3>PPC</h3><p>Google Ads campaigns built around cost per lead, not vanity clicks.</p><ul><li>Campaign setup</li><li>Keyword research</li><li>Landing pages</li><li>Ongoing optimisation</li></ul></div></article><article class="pcard" style="--i:5"><div class="pcard-in"><div class="pc-top"><span class="pn">06 / 07</span><span class="pc-suit">✦</span></div><h3>GA Tracking</h3><p>Know exactly where your leads come from with Google Analytics and conversion tracking.</p><ul><li>GA4 setup</li><li>Google Tag Manager</li><li>Conversion &amp; call tracking</li><li>Clear dashboards</li></ul></div></article><article class="pcard" style="--i:6"><div class="pcard-in"><div class="pc-top"><span class="pn">07 / 07</span><span class="pc-suit">✦</span></div><h3>Full Stack Development</h3><p>Custom web apps, portals and booking systems built with the MERN stack.</p><ul><li>React front-ends</li><li>Node / Express APIs</li><li>MongoDB</li><li>Auth &amp; integrations</li></ul></div></article></div>
+</section>
+
+<section class="skills" id="skills">
+  <div class="sec-head"><p class="eyebrow">Skill set</p><h2 class="h2">The periodic table <em>of my work.</em></h2></div>
+  <div class="pt-legend" id="ptLegend" role="toolbar" aria-label="Filter skills by category"></div>
+  <div class="pt-wrap">
+    <aside class="pt-detail" id="ptDetail" aria-live="polite"></aside>
+    <div class="pt-grid" id="ptGrid"></div>
+  </div>
 </section>
 
 <section class="sim" id="sim">

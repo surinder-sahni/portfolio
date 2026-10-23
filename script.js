@@ -57,8 +57,9 @@ const split = (el, chars) => {
 $$('.split').forEach(el => split(el, true));
 $$('.reveal-text').forEach(el => split(el, false));
 
-// ---------- preloader ----------
-const count = $('#count'), pre = $('#preloader');
+// ---------- preloader + sound gate ----------
+const count = $('#count'), pre = $('#preloader'), gate = $('#gate');
+const LS = 'ss-sound'; let stored = null; try { stored = localStorage.getItem(LS); } catch (e) {}
 const intro = () => {
   document.body.classList.remove('is-loading');
   ScrollTrigger.refresh();
@@ -66,71 +67,94 @@ const intro = () => {
   gsap.from('.mega .ch', { yPercent: 115, duration: 1.2, ease: 'expo.out', stagger: 0.03 });
   gsap.from('.hero .eyebrow, .avatar, .hero-bottom > *, .nav, .floaters', { y: 30, opacity: 0, duration: 1.1, ease: 'power3.out', stagger: 0.08, delay: 0.4, clearProps: 'opacity,transform' });
 };
-if (reduce) { pre.remove(); intro(); }
+const exitPre = () => reduce ? (pre.remove(), intro())
+  : gsap.to(pre, { clipPath: 'inset(0 0 100% 0)', duration: 0.9, ease: 'power4.inOut', onStart: intro, onComplete: () => pre.remove() });
+const showGate = () => {
+  if (stored) { exitPre(); if (stored === 'on') armSound(); return; } // returning visitor: remembered choice, no gate
+  gate.hidden = false; pre.classList.add('gated');
+  if (!reduce) gsap.from(gate.children, { y: 24, opacity: 0, duration: 0.8, ease: 'expo.out', stagger: 0.08 });
+  $('#gateOn').focus({ preventScroll: true });
+};
+$('#gateOn').addEventListener('click', () => { setSound(true); exitPre(); });
+$('#gateOff').addEventListener('click', () => { setSound(false); exitPre(); });
+if (reduce) { count.textContent = 100; showGate(); }
 else {
   const o = { v: 0 };
-  gsap.timeline()
-    .to(o, { v: 100, duration: 1.6, ease: 'power2.inOut', onUpdate: () => { count.textContent = Math.round(o.v); gsap.set('#prebar', { scaleX: o.v / 100 }); } })
-    .to(pre, { clipPath: 'inset(0 0 100% 0)', duration: 0.9, ease: 'power4.inOut', onStart: intro, onComplete: () => pre.remove() }, '+=0.1');
+  gsap.to(o, { v: 100, duration: 1.6, ease: 'power2.inOut', onUpdate: () => { count.textContent = Math.round(o.v); gsap.set('#prebar', { scaleX: o.v / 100 }); }, onComplete: showGate });
 }
 
-// ---------- audio (synthesised live with Web Audio, no files, OFF by default) ----------
-const snd = { ctx: null, master: null, on: false };
+// ---------- audio: voice in the hero, lo-fi loop after it, UI blips (all off unless the visitor opts in) ----------
+// Music is assets/audio/lofi-loop.mp3, an original loop synthesised for this site (no third-party track).
+const LOOP_LEN = 20.8696; // exact loop length in seconds (8 bars at 92 bpm)
+const snd = { ctx: null, master: null, music: null, musicEl: null, on: false, inHero: true, voice: null, voiceDone: false };
 const btns = $$('.sound');
-const startAmbient = () => {
+window.__snd = snd;
+const vid = $('#avatarVideo');
+const ensureCtx = () => {
+  if (snd.ctx) return true;
   const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return false;
   const ctx = snd.ctx = new AC();
-  const master = snd.master = ctx.createGain(); master.gain.value = 0; master.connect(ctx.destination);
-  const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 900; lp.Q.value = 0.7; lp.connect(master);
-  const lfo = ctx.createOscillator(), lfoG = ctx.createGain(); lfo.frequency.value = 0.07; lfoG.gain.value = 450; lfo.connect(lfoG).connect(lp.frequency); lfo.start();
-  // slow drifting chord: D minor 9 spread (warm pad)
-  [73.42, 110, 146.83, 174.61, 220, 329.63].forEach((f, i) => {
-    [-6, 6].forEach(d => {
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.type = i < 2 ? 'sine' : 'triangle'; o.frequency.value = f; o.detune.value = d;
-      g.gain.value = (i < 2 ? 0.09 : 0.035);
-      const trem = ctx.createOscillator(), tg = ctx.createGain(); trem.frequency.value = 0.05 + i * 0.023; tg.gain.value = g.gain.value * 0.6;
-      trem.connect(tg).connect(g.gain); trem.start();
-      o.connect(g).connect(lp); o.start();
+  snd.master = ctx.createGain(); snd.master.gain.value = 1; snd.master.connect(ctx.destination);
+  snd.music = ctx.createGain(); snd.music.gain.value = 0; snd.music.connect(snd.master);
+  // iOS unlock: play a one-sample silent buffer inside the user gesture
+  const b = ctx.createBuffer(1, 1, 22050), s = ctx.createBufferSource(); s.buffer = b; s.connect(ctx.destination); s.start(0);
+  fetch('assets/audio/lofi-loop.mp3').then(r => { if (!r.ok) throw 0; return r.arrayBuffer(); })
+    .then(ab => new Promise((res, rej) => ctx.decodeAudioData(ab, res, rej)))
+    .then(buf => { const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true; src.loopStart = 0; src.loopEnd = Math.min(LOOP_LEN, buf.duration); src.connect(snd.music); src.start(); })
+    .catch(() => { // file:// or old browser: plain looping <audio>, faded by hand
+      const el = snd.musicEl = new Audio('assets/audio/lofi-loop.mp3'); el.loop = true; el.volume = 0; el.preload = 'auto';
     });
-  });
-  // soft air noise
-  const buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate), d = buf.getChannelData(0);
-  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * 0.5;
-  const n = ctx.createBufferSource(); n.buffer = buf; n.loop = true;
-  const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 600; bp.Q.value = 0.4;
-  const ng = ctx.createGain(); ng.gain.value = 0.012; n.connect(bp).connect(ng).connect(master); n.start();
   return true;
 };
+const fadeEl = (el, to, ms = 1200) => { if (!el) return; cancelAnimationFrame(el._f); const from = el.volume, t0 = performance.now();
+  if (to > 0 && el.paused) el.play().catch(() => {});
+  const step = t => { const k = Math.min(1, (t - t0) / ms); el.volume = from + (to - from) * k; if (k < 1) el._f = requestAnimationFrame(step); else if (to === 0) el.pause(); };
+  el._f = requestAnimationFrame(step); };
+// voice slot: the hero video's own audio if it exists, else assets/intro-voice.mp3 if it exists, else nothing
+const findVoice = () => {
+  if (snd.voice !== null) return;
+  if ($('#avatar').classList.contains('has-video')) { snd.voice = vid; return; }
+  snd.voice = false;
+  const v = new Audio(); v.preload = 'auto';
+  v.addEventListener('canplaythrough', () => { snd.voice = v; v.volume = 0; v.addEventListener('ended', () => { snd.voiceDone = true; mix(); }); mix(); }, { once: true });
+  v.addEventListener('error', () => {}, { once: true });
+  v.src = 'assets/intro-voice.mp3';
+};
+vid.addEventListener('timeupdate', () => { if (snd.voice === vid && vid._lt > vid.currentTime + 1) { snd.voiceDone = true; mix(); } vid._lt = vid.currentTime; });
+const mix = () => {
+  const c = snd.ctx, v = snd.voice, talking = snd.on && snd.inHero && v && !snd.voiceDone;
+  const mv = !snd.on ? 0 : talking ? 0.1 : 0.55;
+  if (c) { snd.music.gain.cancelScheduledValues(c.currentTime); snd.music.gain.setTargetAtTime(mv, c.currentTime, 0.5); }
+  fadeEl(snd.musicEl, mv);
+  if (v === vid) { if (talking) { vid.muted = false; fadeEl(vid, 1, 600); } else { cancelAnimationFrame(vid._f); gsap.to(vid, { volume: 0, duration: 0.8, onComplete: () => { vid.muted = true; } }); } }
+  else if (v) fadeEl(v, talking ? 1 : 0, talking ? 600 : 900);
+};
+const setSound = on => {
+  if (on && !ensureCtx()) on = false;
+  snd.on = on; try { localStorage.setItem(LS, on ? 'on' : 'off'); } catch (e) {}
+  if (on) { snd.ctx.resume && snd.ctx.resume(); findVoice(); }
+  btns.forEach(b => { b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); b.querySelector('.sound-label').textContent = on ? 'Sound on' : 'Sound off'; });
+  mix(); blip(on ? 660 : 440, 0.1, 0.05);
+};
+// remembered "on": browsers still need one gesture, so start on the first tap/key
+const armSound = () => { btns.forEach(b => b.classList.add('on')); const go = () => { ['pointerdown', 'keydown'].forEach(e => removeEventListener(e, go, true)); if (!snd.on) setSound(true); };
+  ['pointerdown', 'keydown'].forEach(e => addEventListener(e, go, true)); };
 const blip = (freq = 880, len = 0.08, vol = 0.04) => {
   if (!snd.on || !snd.ctx) return;
   const c = snd.ctx, o = c.createOscillator(), g = c.createGain(), t = c.currentTime;
   o.type = 'sine'; o.frequency.setValueAtTime(freq, t); o.frequency.exponentialRampToValueAtTime(freq * 1.5, t + len);
   g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + len + 0.1);
-  o.connect(g).connect(c.destination); o.start(t); o.stop(t + len + 0.15);
+  o.connect(g).connect(snd.master); o.start(t); o.stop(t + len + 0.15);
 };
-const vid = $('#avatarVideo');
-const toggleSound = () => {
-  if (!snd.ctx && !startAmbient()) return;
-  snd.on = !snd.on;
-  if (snd.on) snd.ctx.resume();
-  snd.master.gain.cancelScheduledValues(snd.ctx.currentTime);
-  snd.master.gain.setTargetAtTime(snd.on ? 0.55 : 0, snd.ctx.currentTime, 0.6);
-  btns.forEach(b => { b.classList.toggle('on', snd.on); b.setAttribute('aria-pressed', snd.on); b.querySelector('.sound-label').textContent = snd.on ? 'Sound on' : 'Sound off'; });
-  if (vid.dataset.video === 'on') vid.muted = !snd.on;
-  blip(snd.on ? 660 : 440, 0.1, 0.05);
-};
-btns.forEach(b => b.addEventListener('click', toggleSound));
-if (!mobile) $$('[data-snd], .nav-links a').forEach(el => el.addEventListener('mouseenter', () => blip(1200, 0.04, 0.015)));
-$$('[data-snd]').forEach(el => el.addEventListener('click', () => blip(520, 0.12, 0.05)));
+btns.forEach(b => b.addEventListener('click', e => { e.stopPropagation(); setSound(!snd.on); }));
+ScrollTrigger.create({ trigger: '.hero', start: 'top top', end: 'bottom 35%', onLeave: () => { snd.inHero = false; mix(); }, onEnterBack: () => { snd.inHero = true; mix(); } });
+if (!mobile) $$('[data-snd], .nav-links a, .pt-el, .cat').forEach(el => el.addEventListener('mouseenter', () => blip(1200, 0.04, 0.015)));
+document.addEventListener('click', e => { if (e.target.closest('[data-snd], .pt-el, .pt-lg')) blip(520, 0.12, 0.05); });
 
-// ---------- avatar video slot ----------
-if (vid.dataset.video === 'on') {
-  vid.src = vid.dataset.src;
-  vid.addEventListener("loadeddata", () => { $('#avatar').classList.add('has-video'); vid.play().catch(() => {}); }, { once: true });
-  vid.addEventListener('error', () => vid.removeAttribute('src'), { once: true });
-  vid.load();
-}
+// ---------- talking hero video slot: assets/hero-talk.mp4 replaces the photo when it exists ----------
+vid.addEventListener('loadeddata', () => { $('#avatar').classList.add('has-video'); vid.play().catch(() => {}); if (snd.on && snd.voice === false) { snd.voice = vid; mix(); } }, { once: true });
+vid.addEventListener('error', () => vid.removeAttribute('src'), { once: true });
+vid.preload = 'metadata'; vid.src = vid.dataset.src;
 
 // ---------- cursor + magnetic ----------
 if (!mobile && !reduce) {
@@ -437,6 +461,99 @@ form.addEventListener('submit', async e => {
     ScrollTrigger.refresh();
   } catch { note.textContent = 'Something went wrong — please try WhatsApp or email.'; }
 });
+
+// ---------- About: hanging ID card (pendulum physics, canvas lanyard, flip on tap) ----------
+(() => {
+  const stage = $('#idcStage'), pend = $('#idcPend'), card = $('#idcCard'), inner = $('#idcInner'), cv = $('#idcStrap');
+  if (!stage) return;
+  const qr = $('.idc-qr'); let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const cells = []; for (let y = 0; y < 21; y++) for (let x = 0; x < 21; x++) { const f = (x < 7 && y < 7) || (x > 13 && y < 7) || (x < 7 && y > 13);
+    const fin = f && (((x % 14) === 0 || (x % 14) === 6 || y % 14 === 0 || y % 14 === 6) || ((x % 14) > 1 && (x % 14) < 5 && (y % 14) > 1 && (y % 14) < 5));
+    if (f ? fin : rnd() > 0.52) cells.push(`<rect x="${x}" y="${y}" width="1" height="1"/>`); }
+  qr.innerHTML = `<svg viewBox="0 0 21 21" shape-rendering="crispEdges">${cells.join('')}</svg>`;
+  const ctx = cv.getContext('2d'); let W, H, L, dpr;
+  const st = { th: 0.0, w: 0, thm: 0, flip: 0, drag: false, lastT: 0, vis: false };
+  const size = () => { dpr = Math.min(devicePixelRatio || 1, 2); W = stage.clientWidth; H = stage.clientHeight; L = parseFloat(getComputedStyle(stage).getPropertyValue('--L')) || 260;
+    cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + 'px'; cv.style.height = H + 'px'; };
+  size(); addEventListener('resize', size);
+  const drawStrap = () => {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    const ax = W / 2, ex = ax - Math.sin(st.th) * L, ey = Math.cos(st.th) * L;
+    const mx = ax - Math.sin(st.thm) * L * 0.5, my = Math.cos(st.thm) * L * 0.5 + 6;
+    for (const [off, col, wd] of [[0, '#7a3a17', 20], [0, '#d4703a', 16]]) { ctx.beginPath(); ctx.moveTo(ax, -10); ctx.quadraticCurveTo(mx * 2 - (ax + ex) / 2, my * 2 - (ey - 10) / 2, ex, ey - 14);
+      ctx.strokeStyle = col; ctx.lineWidth = wd; ctx.lineCap = 'butt'; ctx.stroke(); }
+    ctx.setLineDash([4, 5]); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(255,230,200,.45)';
+    ctx.beginPath(); ctx.moveTo(ax, -10); ctx.quadraticCurveTo(mx * 2 - (ax + ex) / 2, my * 2 - (ey - 10) / 2, ex, ey - 14); ctx.stroke(); ctx.setLineDash([]);
+  };
+  const render = () => {
+    const twist = Math.max(-25, Math.min(25, st.w * 9));
+    pend.style.transform = `rotate(${st.th}rad)`;
+    const ang = (st.flip + twist) * Math.PI / 180, c = Math.cos(ang);
+    inner.style.transform = `scaleX(${Math.max(0.02, Math.abs(c)).toFixed(4)}) skewY(${(Math.sin(ang) * (c < 0 ? -6 : 6)).toFixed(2)}deg)`; // 2D flip: no WebKit 3D bugs
+    const isBack = Math.cos((st.flip + twist) * Math.PI / 180) < 0; if (isBack !== st.isBack) { st.isBack = isBack; inner.classList.toggle('is-back', isBack); }
+    drawStrap();
+  };
+  const tick = t => {
+    const dt = Math.min(0.033, (t - (st.lastT || t)) / 1000); st.lastT = t;
+    if (!st.drag && !reduce) { const a = -9.5 * Math.sin(st.th) - 0.9 * st.w; st.w += a * dt; st.w = Math.max(-6, Math.min(6, st.w)); st.th += st.w * dt; }
+    st.thm += (st.th - st.thm) * Math.min(1, dt * 9);
+    render(); if (st.vis) requestAnimationFrame(tick); else st.lastT = 0;
+  };
+  new IntersectionObserver(es => es.forEach(e => { const was = st.vis; st.vis = e.isIntersecting; if (st.vis && !was) { if (!st.entered) { st.entered = true; st.th = -0.35; st.w = 0.4; } requestAnimationFrame(tick); } })).observe(stage);
+  render();
+  // drag + tap
+  let sx = 0, sy = 0, moved = false, lastA = 0, lastTime = 0;
+  const angleAt = e => { const r = stage.getBoundingClientRect(); return -Math.atan2(e.clientX - (r.left + W / 2), Math.max(40, e.clientY - r.top)); };
+  card.addEventListener('pointerdown', e => { if (e.button > 0) return; e.preventDefault(); st.drag = true; moved = false; sx = e.clientX; sy = e.clientY; lastA = st.th; lastTime = performance.now(); card.setPointerCapture(e.pointerId); card.classList.add('grab'); });
+  card.addEventListener('pointermove', e => { if (!st.drag) return; if (Math.hypot(e.clientX - sx, e.clientY - sy) > 6) moved = true; if (!moved) return;
+    const a = Math.max(-1.2, Math.min(1.2, angleAt(e))), now = performance.now(), dtt = Math.max(1, now - lastTime) / 1000;
+    st.w = Math.max(-5, Math.min(5, (a - lastA) / Math.max(0.016, dtt) * 0.6)); st.th = a; lastA = a; lastTime = now; });
+  const flip = () => { gsap.to(st, { flip: st.flip >= 90 ? 0 : 180, duration: 0.9, ease: 'back.out(1.4)' }); st.w += (st.th > 0 ? -1 : 1) * 1.2; blip(st.flip >= 90 ? 520 : 780, 0.12, 0.04);
+    card.setAttribute('aria-label', st.flip >= 90 ? 'ID card front. Press to flip' : 'ID card back: services and contact. Press to flip'); };
+  const up = e => { if (!st.drag) return; st.drag = false; card.classList.remove('grab'); if (!moved && !e.target.closest('.idc-cta')) flip(); };
+  card.addEventListener('pointerup', up); card.addEventListener('pointercancel', () => { st.drag = false; card.classList.remove('grab'); });
+  card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); } });
+  // cursor proximity nudge
+  let pmx = null; stage.addEventListener('mousemove', e => { if (st.drag) return; if (pmx !== null) { const r = card.getBoundingClientRect(), d = Math.hypot(e.clientX - (r.left + r.width / 2), e.clientY - (r.top + r.height / 2));
+    if (d < 260) st.w += (e.clientX - pmx) * 0.0016 * (1 - d / 260); } pmx = e.clientX; });
+  stage.addEventListener('mouseleave', () => pmx = null);
+  window.__idc = st; // for testing
+})();
+
+// ---------- Skills: periodic table ----------
+(() => {
+  const grid = $('#ptGrid'), det = $('#ptDetail'), leg = $('#ptLegend'); if (!grid) return;
+  const CAT = { cms: 'CMS & builders', design: 'Design', growth: 'Growth & marketing', code: 'Code' };
+  const E = [
+    ['Wp', 'WordPress', 'cms', 'Custom themes and sites clients can actually manage.'], ['El', 'Elementor', 'cms', 'Pixel-accurate Elementor builds with global styles and templates.'],
+    ['Dv', 'Divi', 'cms', 'Divi layouts that stay fast and easy to edit.'], ['Gb', 'Gutenberg', 'cms', 'Block-based pages and reusable block patterns.'],
+    ['Wc', 'WooCommerce', 'cms', 'Online stores, product setups and checkout tweaks.'], ['Ai', 'AI to WordPress', 'cms', 'AI-generated designs turned into real, editable WordPress sites.'],
+    ['Fg', 'Figma to WP', 'design', 'Figma files rebuilt in WordPress, faithful to the design.'], ['Ux', 'UI/UX', 'design', 'User flows and interfaces that make the next step obvious.'],
+    ['Wf', 'Wireframes', 'design', 'Low-fidelity layouts to agree structure before visuals.'], ['Pt', 'Prototypes', 'design', 'Clickable Figma prototypes to test before building.'],
+    ['Lp', 'Landing Pages', 'growth', 'One-goal pages built to convert ad and search traffic.'], ['Se', 'SEO', 'growth', 'Technical, on-page and local SEO that gets you found.'],
+    ['Gp', 'Google Business', 'growth', 'Google Business Profile setup for local map visibility.'], ['Pc', 'PPC', 'growth', 'Google Ads campaigns with pages that match the ad.'],
+    ['Ga', 'GA4', 'growth', 'Analytics that shows where enquiries come from.'], ['Gt', 'Tag Manager', 'growth', 'Form, call and click conversion tracking via GTM.'],
+    ['Cr', 'CRO', 'growth', 'Small changes, tested, that lift enquiry rates.'],
+    ['Ht', 'HTML5', 'code', 'Clean, semantic, accessible markup.'], ['Cs', 'CSS3', 'code', 'Responsive layouts and smooth, lightweight animation.'],
+    ['Js', 'JavaScript', 'code', 'Interactive features without heavy plugins.'], ['Ph', 'PHP', 'code', 'Custom WordPress functions, hooks and plugins.'],
+    ['Mg', 'MongoDB', 'code', 'The M in MERN: flexible document databases.'], ['Ex', 'Express', 'code', 'The E in MERN: lean Node.js APIs.'],
+    ['Re', 'React', 'code', 'The R in MERN: fast, component-based front-ends.'], ['Nd', 'Node.js', 'code', 'The N in MERN: server-side JavaScript.']
+  ];
+  leg.innerHTML = `<button class="pt-lg on" data-f="all" aria-pressed="true">All</button>` + Object.entries(CAT).map(([k, v]) => `<button class="pt-lg" data-f="${k}" aria-pressed="false"><i class="c-${k}"></i>${v}</button>`).join('');
+  grid.innerHTML = E.map(([sym, name, c], i) => `<button class="pt-el c-${c}" data-i="${i}" data-c="${c}" aria-label="${name}"><small>${i + 1}</small><b>${sym}</b><span>${name}</span></button>`).join('');
+  const show = i => { const [sym, name, c, d] = E[i]; det.className = 'pt-detail c-' + c;
+    det.innerHTML = `<div class="pt-big"><small>${i + 1}</small><b>${sym}</b><span>${name}</span><em>${CAT[c]}</em></div><p>${d}</p>`;
+    $$('.pt-el', grid).forEach(b => b.classList.toggle('sel', +b.dataset.i === i)); };
+  show(0);
+  grid.addEventListener('mouseover', e => { const b = e.target.closest('.pt-el'); if (b && !mobile) show(+b.dataset.i); });
+  grid.addEventListener('click', e => { const b = e.target.closest('.pt-el'); if (b) show(+b.dataset.i); });
+  grid.addEventListener('focusin', e => { const b = e.target.closest('.pt-el'); if (b) show(+b.dataset.i); });
+  leg.addEventListener('click', e => { const b = e.target.closest('.pt-lg'); if (!b) return; const f = b.dataset.f;
+    $$('.pt-lg', leg).forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b); });
+    grid.classList.toggle('filtering', f !== 'all'); $$('.pt-el', grid).forEach(x => x.classList.toggle('hit', x.dataset.c === f));
+    if (f !== 'all') show(E.findIndex(x => x[2] === f)); });
+  if (!reduce && window.ScrollTrigger) gsap.from($$('.pt-el', grid), { y: 30, opacity: 0, scale: 0.9, duration: 0.7, ease: 'expo.out', stagger: { each: 0.03, from: 'start' }, clearProps: 'transform,opacity', scrollTrigger: { trigger: grid, start: 'top 85%', once: true } });
+})();
 
 addEventListener('load', () => ScrollTrigger.refresh());
 })();
