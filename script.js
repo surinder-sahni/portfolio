@@ -173,7 +173,8 @@ stackFx('.rv', null, 0.92, 0.4);
 // ---------- projects: scroll-pinned horizontal slider + cursor layer (data from projects.js) ----------
 const P = window.PROJECTS || [], slider = $('#slider'), rail = $('#rail');
 const sizes = ['l', 's', 'm', 'l', 'm', 's'];
-rail.innerHTML = P.map((p, i) => `<figure class="slide sz-${['l','m','s'].includes(p.size) ? p.size : sizes[i % sizes.length]}" data-i="${i}" tabindex="0" role="button" aria-label="Open ${p.title}"><div class="sw"><img src="${p.cover || p.full}" data-full="${p.full || ''}" alt="${p.title} website" loading="lazy" draggable="false"></div><figcaption><small>${String(i + 1).padStart(2, '0')}</small><span>${p.niche || p.category}</span></figcaption></figure>`).join('');
+const cardHTML = (p, i) => `<figure class="slide" data-i="${i}"><div class="sw"><img src="${p.cover || p.full}" data-full="${p.full || ''}" alt="${p.title} website" loading="lazy" draggable="false"><button class="pv" type="button" data-open="${i}" aria-label="View project: ${p.title}">View project <i>→</i></button></div><figcaption><b><small>${String(i + 1).padStart(2, '0')}</small>${p.title}</b><span>${p.niche || p.category}</span></figcaption></figure>`;
+rail.innerHTML = P.map(cardHTML).join('');
 const slides = $$('.slide'), pad2 = n => String(n).padStart(2, '0');
 $('#smTot').textContent = pad2(P.length);
 let active = -1;
@@ -184,8 +185,9 @@ const nearest = () => { const c = innerWidth / 2; let best = 0, bd = 1e9;
   slides.forEach((s, i) => { const r = s.getBoundingClientRect(), d = Math.abs(r.left + r.width / 2 - c); if (d < bd) { bd = d; best = i; } }); return best; };
 setActive(0);
 let dragMoved = false;
-if (reduce) {
-  slider.classList.add('native');
+if (reduce || mobile) {
+  slider.classList.add(mobile ? 'stacked' : 'native');
+  if (mobile && !reduce) slides.forEach(sl => gsap.fromTo(sl.querySelector('.sw'), { clipPath: 'inset(18% 6% 0% 6% round 22px)', y: 40 }, { clipPath: 'inset(0% 0% 0% 0% round 22px)', y: 0, duration: 1.1, ease: 'expo.out', scrollTrigger: { trigger: sl, start: 'top 88%', once: true } }));
   let raf = 0; slider.addEventListener('scroll', () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => setActive(nearest())); }, { passive: true });
 } else {
   // pinned: vertical scroll drives the rail; cursor layers an offset + skew on top (desktop)
@@ -223,15 +225,15 @@ if (!mobile && !reduce) slides.forEach(s => {
   s.addEventListener('mouseleave', () => { tw && tw.kill(); tw = gsap.to(img, { y: 0, duration: 1.2, ease: 'power3.out' }); });
 });
 // entrance: clip-path reveal
-if (!reduce) gsap.fromTo(slides, { clipPath: 'inset(100% 0% 0% 0% round 22px)' }, { clipPath: 'inset(0% 0% 0% 0% round 22px)', duration: 1.3, ease: 'expo.out', stagger: 0.08, scrollTrigger: { trigger: slider, start: 'top 85%', once: true } });
+if (!reduce && !mobile) gsap.fromTo(slides, { clipPath: 'inset(100% 0% 0% 0% round 22px)' }, { clipPath: 'inset(0% 0% 0% 0% round 22px)', duration: 1.3, ease: 'expo.out', stagger: 0.08, scrollTrigger: { trigger: slider, start: 'top 85%', once: true } });
 // lightbox
 const lb = $('#lightbox'); let lbi = 0;
 const showLb = i => { lbi = i; const p = P[i]; $('#lbImg').src = p.full || p.cover; $('.lb-scroll').scrollTop = 0; $('#lbImg').alt = p.title; $('#lbCap').innerHTML = `<span>${p.title} · ${p.category}</span>` + (p.link ? `<a href="${p.link}" target="_blank" rel="noopener">Visit site ↗</a>` : ''); };
-function closeLb() { if (!lb.classList.contains('open')) return; lb.classList.remove('open'); lb.setAttribute('aria-hidden', 'true'); lenis && lenis.start(); }
+function closeLb() { if (!lb.classList.contains('open')) return; lb.classList.remove('open'); lb.setAttribute('aria-hidden', 'true'); if (!document.body.classList.contains('cv-open')) lenis && lenis.start(); }
 const step = d => showLb((lbi + d + P.length) % P.length);
-slides.forEach(t => { const open = () => { showLb(+t.dataset.i); lb.classList.add('open'); lb.setAttribute('aria-hidden', 'false'); lenis && lenis.stop(); blip(520, 0.12, 0.05); };
-  t.addEventListener('click', () => { if (dragMoved) { dragMoved = false; return; } open(); });
-  t.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } }); });
+const openLb = i => { showLb(i); lb.classList.add('open'); lb.setAttribute('aria-hidden', 'false'); lenis && lenis.stop(); blip(520, 0.12, 0.05); };
+document.addEventListener('click', e => { const b = e.target.closest('[data-open]'), sl = e.target.closest('.slide'); if (!b && !sl) return;
+  if (dragMoved) { dragMoved = false; return; } e.preventDefault(); openLb(+(b ? b.dataset.open : sl.dataset.i)); });
 $('.lb-close').addEventListener('click', closeLb); $('.lb-prev').addEventListener('click', () => step(-1)); $('.lb-next').addEventListener('click', () => step(1));
 lb.addEventListener('click', e => { if (e.target === lb) closeLb(); });
 addEventListener('keydown', e => { if (!lb.classList.contains('open')) return; if (e.key === 'Escape') closeLb(); if (e.key === 'ArrowRight') step(1); if (e.key === 'ArrowLeft') step(-1); });
@@ -241,6 +243,47 @@ if (cursorEl) slides.forEach(t => { t.addEventListener('mouseenter', () => curso
 // ---------- section reveals ----------
 if (!reduce) $$('.sec-head, .svc-head > *, .big-cta span, .stats > div, .contact-copy, .cta-band').forEach(el =>
   gsap.from(el, { y: 50, opacity: 0, duration: 1.1, ease: 'expo.out', scrollTrigger: { trigger: el, start: 'top 88%', once: true } }));
+
+// ---------- category cards -> full-screen category view (clip-path wipe from the card, history-aware) ----------
+const CATS = window.CATEGORIES || [], catList = $('#catList'), cv = $('#catView'), cvBody = $('#cvBody');
+const catProjects = c => c.match ? P.map((p, i) => [p, i]).filter(([p]) => (p.category + ' ' + p.niche).includes(c.match)) : [];
+catList.innerHTML = CATS.map((c, k) => { const n = catProjects(c).length;
+  return `<button class="cat" type="button" data-cat="${k}" aria-haspopup="dialog"><span class="cat-n">${c.num}</span><span class="cat-t"><strong>${c.title}</strong><em>${c.line}</em></span><span class="cat-m"><b>${n ? n + ' projects' : 'Service'}</b><i>→</i></span></button>`; }).join('');
+if (!reduce) gsap.from('.cat', { y: 40, opacity: 0, duration: 1, ease: 'expo.out', stagger: 0.1, scrollTrigger: { trigger: catList, start: 'top 85%', once: true } });
+let cvOpen = false, cvRect = null;
+const rectClip = r => r ? `inset(${r.top}px ${innerWidth - r.right}px ${innerHeight - r.bottom}px ${r.left}px round 18px)` : 'inset(50% 0% 50% 0%)';
+function renderCat(c) {
+  const items = catProjects(c);
+  $('#cvNum').textContent = c.num; $('#cvTitle').textContent = c.title;
+  $('#cvKick').textContent = items.length ? 'The work' : 'The service';
+  $('#cvCount').textContent = items.length ? pad2(items.length) + ' projects' : '';
+  cvBody.innerHTML = `<p class="cv-intro">${c.intro}</p>` + (items.length
+    ? `<div class="cv-grid">${items.map(([p, i]) => cardHTML(p, i)).join('')}</div>`
+    : `<div class="cv-svc"><ol>${(c.points || []).map(x => `<li>${x}</li>`).join('')}</ol><div class="cv-cta"><h3>Case studies coming soon.</h3><p>I'm adding ${c.title.toLowerCase()} case studies here. Until then, tell me about your project and I'll walk you through how I'd approach it.</p><a href="#contact" class="btn" data-cv-cta data-snd><span>Book a free strategy call</span><i>→</i></a></div></div>`);
+}
+function openCat(k, card, push = true) {
+  const c = CATS[k]; if (!c) return; renderCat(c); cvOpen = true;
+  cvRect = card ? card.getBoundingClientRect() : null;
+  document.body.classList.add('cv-open'); lenis && lenis.stop(); document.documentElement.style.overflow = 'hidden';
+  cv.classList.add('open'); cv.setAttribute('aria-hidden', 'false'); $('.cv-scroll').scrollTop = 0;
+  if (push) history.pushState({ cat: k }, '', '#category-' + (k + 1));
+  gsap.killTweensOf(cv);
+  if (reduce) gsap.set(cv, { clipPath: 'inset(0% 0% 0% 0% round 0px)' });
+  else { gsap.fromTo(cv, { clipPath: rectClip(cvRect) }, { clipPath: 'inset(0px 0px 0px 0px round 0px)', duration: 0.9, ease: 'expo.inOut' });
+    gsap.from(cv.querySelectorAll('.cv-head > *, .cv-intro, .cv-grid .slide, .cv-svc > *'), { y: 50, opacity: 0, duration: 0.9, ease: 'expo.out', stagger: 0.07, delay: 0.45 }); }
+  blip(440, 0.14, 0.05); setTimeout(() => $('.cv-close').focus({ preventScroll: true }), 50);
+}
+function closeCat() {
+  if (!cvOpen) return; cvOpen = false; closeLb();
+  const done = () => { cv.classList.remove('open'); cv.setAttribute('aria-hidden', 'true'); document.body.classList.remove('cv-open'); document.documentElement.style.overflow = ''; lenis && lenis.start(); };
+  if (reduce) done(); else gsap.to(cv, { clipPath: rectClip(cvRect), duration: 0.7, ease: 'expo.inOut', onComplete: done });
+}
+catList.addEventListener('click', e => { const b = e.target.closest('.cat'); if (b) openCat(+b.dataset.cat, b); });
+$('.cv-close').addEventListener('click', () => { history.state && history.state.cat != null ? history.back() : closeCat(); });
+cv.addEventListener('click', e => { if (e.target.closest('[data-cv-cta]')) { e.preventDefault(); history.state && history.state.cat != null ? history.back() : closeCat(); setTimeout(() => scrollToEl($('#contact')), 800); } });
+addEventListener('popstate', e => { if (e.state && e.state.cat != null) { if (!cvOpen) openCat(e.state.cat, null, false); } else closeCat(); });
+addEventListener('keydown', e => { if (e.key === 'Escape' && cvOpen && !lb.classList.contains('open')) $('.cv-close').click(); }, true);
+const deep = location.hash.match(/^#category-(\d+)$/); if (deep) { history.replaceState(null, '', location.pathname); history.pushState({ cat: +deep[1] - 1 }, '', deep[0]); openCat(+deep[1] - 1, null, false); }
 
 // ---------- lead growth simulator ----------
 {
