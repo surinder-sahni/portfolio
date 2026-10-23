@@ -94,10 +94,13 @@
   <div class="cat-list" id="catList"></div>
 </section>
 <div class="catv" id="catView" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="cvTitle">
-  <div class="cv-scroll" data-lenis-prevent>
-    <header class="cv-head"><div><p class="eyebrow"><b class="rn" id="cvNum">I</b> <span id="cvKick">The work</span></p><h2 id="cvTitle">Website Design</h2></div><div class="cv-right"><span class="cv-count" id="cvCount"></span><button class="cv-close" type="button" aria-label="Close and go back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></header>
-    <div class="cv-body" id="cvBody"></div>
-  </div>
+  <div class="cv-scroll" id="cvScroll" data-lenis-prevent tabindex="-1"><div class="cv-track" id="cvTrack"><div class="cv-hall">
+    <div class="cv-wall" id="cvWall"></div><div class="cv-floor"></div>
+    <div class="cv-stage"><div class="cv-row" id="cvRow"></div></div>
+    <header class="cv-head"><p class="eyebrow"><b class="rn" id="cvNum">I</b> <span id="cvKick">The studio</span></p><h2 id="cvTitle">Website Design</h2></header>
+    <button class="cv-close" type="button" aria-label="Close and go back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div class="cv-bar"><span class="cv-count"><b id="cvNow">01</b> / <span id="cvTot">05</span></span><span class="cv-hint">Scroll to walk the studio</span><i><b id="cvProg"></b></i></div>
+  </div></div></div>
 </div>
 
 <section class="results">

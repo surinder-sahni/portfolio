@@ -250,34 +250,73 @@ const catProjects = c => c.match ? P.map((p, i) => [p, i]).filter(([p]) => (p.ca
 catList.innerHTML = CATS.map((c, k) => { const n = catProjects(c).length;
   return `<button class="cat" type="button" data-cat="${k}" aria-haspopup="dialog"><span class="cat-n">${c.num}</span><span class="cat-t"><strong>${c.title}</strong><em>${c.line}</em></span><span class="cat-m"><b>${n ? n + ' projects' : 'Service'}</b><i>→</i></span></button>`; }).join('');
 if (!reduce) gsap.from('.cat', { y: 40, opacity: 0, duration: 1, ease: 'expo.out', stagger: 0.1, scrollTrigger: { trigger: catList, start: 'top 85%', once: true } });
-let cvOpen = false, cvRect = null;
+let cvOpen = false, cvRect = null, cvRun = false, cvCur = 0, cvLast = 0, cvEx = [], cvCenters = [];
+const cvScroll = $('#cvScroll'), cvRow = $('#cvRow'), cvWall = $('#cvWall');
 const rectClip = r => r ? `inset(${r.top}px ${innerWidth - r.right}px ${innerHeight - r.bottom}px ${r.left}px round 18px)` : 'inset(50% 0% 50% 0%)';
+const exWrap = (inner, plaque) => `<div class="ex"><div class="ex-inner"><span class="ex-lamp"></span><span class="ex-glow"></span><div class="ex-frame"><div class="ex-mat">${inner}</div><span class="ex-dim"></span></div>${plaque}</div></div>`;
 function renderCat(c) {
   const items = catProjects(c);
   $('#cvNum').textContent = c.num; $('#cvTitle').textContent = c.title;
-  $('#cvKick').textContent = items.length ? 'The work' : 'The service';
-  $('#cvCount').textContent = items.length ? pad2(items.length) + ' projects' : '';
-  cvBody.innerHTML = `<p class="cv-intro">${c.intro}</p>` + (items.length
-    ? `<div class="cv-grid">${items.map(([p, i]) => cardHTML(p, i)).join('')}</div>`
-    : `<div class="cv-svc"><ol>${(c.points || []).map(x => `<li>${x}</li>`).join('')}</ol><div class="cv-cta"><h3>Case studies coming soon.</h3><p>I'm adding ${c.title.toLowerCase()} case studies here. Until then, tell me about your project and I'll walk you through how I'd approach it.</p><a href="#contact" class="btn" data-cv-cta data-snd><span>Book a free strategy call</span><i>→</i></a></div></div>`);
+  $('#cvKick').textContent = items.length ? 'The studio' : 'The service';
+  $('.cv-hint').textContent = items.length ? 'Scroll to walk the studio' : 'Scroll to walk through it';
+  const html = items.length
+    ? items.map(([p, i]) => exWrap(`<div class="ex-bar"><i></i><i></i><i></i><span></span></div><div class="ex-shot"><img src="${p.cover || p.full}" alt="${p.title} website" loading="lazy" draggable="false"></div>`,
+        `<div class="ex-plaque"><b>${p.title}</b><small>${p.niche} · ${p.category}</small><button class="ex-btn" type="button" data-open="${i}">View full site <i>↗</i></button></div>`))
+    : (c.points || []).map((x, k) => exWrap(`<div class="ex-card"><span class="n">${['I','II','III','IV','V','VI'][k]}</span><p>${x}</p></div>`, `<div class="ex-plaque"><b>${c.title}</b><small>What's included · ${k + 1} of ${c.points.length}</small></div>`))
+      .concat(exWrap(`<div class="ex-card cta"><span class="n">→</span><p>Case studies are on the way. Let's talk about yours.</p><a href="#contact" class="btn" data-cv-cta data-snd><span>Book a free strategy call</span><i>→</i></a></div>`, `<div class="ex-plaque"><b>Your project, next</b><small>Free 30-min call</small></div>`));
+  cvRow.innerHTML = html.join('');
+  cvEx = $$('.ex', cvRow); $('#cvTot').textContent = pad2(cvEx.length); $('#cvTrack').style.setProperty('--n', cvEx.length);
+}
+function cvMeasure() { cvCenters = cvEx.map(e => e.offsetLeft + e.offsetWidth / 2); }
+function cvFrame(now) {
+  if (!cvRun) return; requestAnimationFrame(cvFrame);
+  const N = cvEx.length, max = cvScroll.scrollHeight - cvScroll.clientHeight, t = max > 0 ? cvScroll.scrollTop / max : 0, target = t * (N - 1);
+  const dt = Math.min(0.1, (now - (cvLast || now)) / 1000); cvLast = now;
+  cvCur += (target - cvCur) * (reduce ? 1 : 1 - Math.exp(-dt * 6)); if (Math.abs(target - cvCur) < 0.0005) cvCur = target;
+  const i0 = Math.max(0, Math.min(N - 1, Math.floor(cvCur))), i1 = Math.min(N - 1, i0 + 1), f = cvCur - i0;
+  const cx = cvCenters[i0] * (1 - f) + cvCenters[i1] * f, bob = reduce ? 0 : Math.sin(cvCur * Math.PI * 2) * 3;
+  cvRow.style.transform = `translate3d(${(innerWidth / 2 - cx).toFixed(1)}px,calc(-50% + ${bob.toFixed(2)}px),0)`;
+  cvWall.style.transform = `translate3d(${(-cx * 0.04 % 120).toFixed(1)}px,0,0)`;
+  for (let i = 0; i < N; i++) { const d = i - cvCur, ad = Math.abs(d), lit = Math.max(0, 1 - ad * 1.1);
+    cvEx[i].style.setProperty('--lit', lit.toFixed(3));
+    cvEx[i].style.transform = `rotateY(${Math.max(-28, Math.min(28, -d * 15)).toFixed(2)}deg) scale(${(1 - Math.min(ad, 1.5) * 0.1).toFixed(3)})`; }
+  $('#cvNow').textContent = pad2(Math.round(cvCur) + 1); $('#cvProg').style.transform = `scaleX(${t.toFixed(3)})`;
 }
 function openCat(k, card, push = true) {
   const c = CATS[k]; if (!c) return; renderCat(c); cvOpen = true;
   cvRect = card ? card.getBoundingClientRect() : null;
   document.body.classList.add('cv-open'); lenis && lenis.stop(); document.documentElement.style.overflow = 'hidden';
-  cv.classList.add('open'); cv.setAttribute('aria-hidden', 'false'); $('.cv-scroll').scrollTop = 0;
+  cv.classList.add('open'); cv.setAttribute('aria-hidden', 'false'); cvScroll.scrollTop = 0; cvCur = 0; cvLast = 0;
+  cvMeasure(); cvRun = true; requestAnimationFrame(cvFrame);
   if (push) history.pushState({ cat: k }, '', '#category-' + (k + 1));
   gsap.killTweensOf(cv);
   if (reduce) gsap.set(cv, { clipPath: 'inset(0% 0% 0% 0% round 0px)' });
-  else { gsap.fromTo(cv, { clipPath: rectClip(cvRect) }, { clipPath: 'inset(0px 0px 0px 0px round 0px)', duration: 0.9, ease: 'expo.inOut' });
-    gsap.from(cv.querySelectorAll('.cv-head > *, .cv-intro, .cv-grid .slide, .cv-svc > *'), { y: 50, opacity: 0, duration: 0.9, ease: 'expo.out', stagger: 0.07, delay: 0.45 }); }
-  blip(440, 0.14, 0.05); setTimeout(() => $('.cv-close').focus({ preventScroll: true }), 50);
+  else {
+    // staged entrance: room wipes open from the card -> heading rises -> frames slide in -> lamps glow on -> plaques settle
+    const inners = $$('.ex-inner', cvRow), glows = $$('.ex-glow', cvRow), lamps = $$('.ex-lamp', cvRow);
+    const tl = gsap.timeline();
+    tl.fromTo(cv, { clipPath: rectClip(cvRect) }, { clipPath: 'inset(0px 0px 0px 0px round 0px)', duration: 0.85, ease: 'expo.inOut' })
+      .from('.cv-floor', { yPercent: 100, duration: 0.8, ease: 'expo.out' }, 0.35)
+      .from('.cv-head > *', { y: 40, opacity: 0, duration: 0.8, ease: 'expo.out', stagger: 0.08 }, 0.5)
+      .from(['.cv-close', '.cv-bar'], { opacity: 0, y: 16, duration: 0.6, ease: 'power3.out' }, 0.6)
+      .from(inners, { x: 220, opacity: 0, duration: 1.1, ease: 'expo.out', stagger: 0.07 }, 0.5)
+      .from(lamps, { opacity: 0, y: -14, duration: 0.5, ease: 'power2.out', stagger: 0.07 }, 0.95)
+      .fromTo(glows, { opacity: 0 }, { opacity: (i, el) => +(getComputedStyle(el.closest('.ex')).getPropertyValue('--lit')) * .95, duration: 0.12, repeat: 3, yoyo: true, ease: 'none', clearProps: 'opacity' }, 1.15);
+  }
+  blip(440, 0.14, 0.05); setTimeout(() => blip(880, 0.06, 0.03), 1150);
+  setTimeout(() => cvScroll.focus({ preventScroll: true }), 60);
 }
 function closeCat() {
   if (!cvOpen) return; cvOpen = false; closeLb();
-  const done = () => { cv.classList.remove('open'); cv.setAttribute('aria-hidden', 'true'); document.body.classList.remove('cv-open'); document.documentElement.style.overflow = ''; lenis && lenis.start(); };
-  if (reduce) done(); else gsap.to(cv, { clipPath: rectClip(cvRect), duration: 0.7, ease: 'expo.inOut', onComplete: done });
+  const done = () => { cvRun = false; cv.classList.remove('open'); cv.setAttribute('aria-hidden', 'true'); document.body.classList.remove('cv-open'); document.documentElement.style.overflow = ''; lenis && lenis.start(); };
+  if (reduce) done(); else { gsap.to('.ex-inner', { opacity: 0, y: 30, duration: 0.35, ease: 'power2.in', stagger: 0.03 }); gsap.to(cv, { clipPath: rectClip(cvRect), duration: 0.7, delay: 0.2, ease: 'expo.inOut', onComplete: done }); }
 }
+addEventListener('resize', () => cvOpen && cvMeasure());
+cv.addEventListener('keydown', e => { const N = cvEx.length, step = (cvScroll.scrollHeight - cvScroll.clientHeight) / Math.max(1, N - 1);
+  if (['ArrowRight', 'ArrowDown', 'PageDown'].includes(e.key)) { e.preventDefault(); cvScroll.scrollTo({ top: Math.min(N - 1, Math.round(cvCur) + 1) * step, behavior: 'smooth' }); }
+  if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); cvScroll.scrollTo({ top: Math.max(0, Math.round(cvCur) - 1) * step, behavior: 'smooth' }); } });
+cvRow.addEventListener('click', e => { const ex = e.target.closest('.ex'); if (!ex || e.target.closest('button,a')) return; const i = cvEx.indexOf(ex);
+  if (i !== Math.round(cvCur)) { e.stopPropagation(); const N = cvEx.length; cvScroll.scrollTo({ top: i * (cvScroll.scrollHeight - cvScroll.clientHeight) / Math.max(1, N - 1), behavior: 'smooth' }); } }, true);
 catList.addEventListener('click', e => { const b = e.target.closest('.cat'); if (b) openCat(+b.dataset.cat, b); });
 $('.cv-close').addEventListener('click', () => { history.state && history.state.cat != null ? history.back() : closeCat(); });
 cv.addEventListener('click', e => { if (e.target.closest('[data-cv-cta]')) { e.preventDefault(); history.state && history.state.cat != null ? history.back() : closeCat(); setTimeout(() => scrollToEl($('#contact')), 800); } });
