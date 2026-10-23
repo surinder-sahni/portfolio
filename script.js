@@ -241,8 +241,48 @@ const cursorEl = $('#cursor');
 if (cursorEl) slides.forEach(t => { t.addEventListener('mouseenter', () => cursorEl.classList.add('view')); t.addEventListener('mouseleave', () => cursorEl.classList.remove('view')); });
 
 // ---------- section reveals ----------
-if (!reduce) $$('.sec-head, .svc-head > *, .big-cta span, .stats > div, .contact-copy, .cta-band').forEach(el =>
-  gsap.from(el, { y: 50, opacity: 0, duration: 1.1, ease: 'expo.out', scrollTrigger: { trigger: el, start: 'top 88%', once: true } }));
+// v10: reusable reveal system. Markup: data-anim="fade|fade-up|fade-down|fade-left|fade-right" [data-delay="0.2"] [data-split="words"]
+// Defaults are assigned here so every section gets a consistent, varied rhythm; explicit attributes in HTML win.
+const AUTO = [
+  ['main section .eyebrow, .sec-head .eyebrow', 'fade-right'],
+  ['.h2, .big-cta, .mega-2', 'fade-up', 'words'],
+  ['.svc-sub, .sim-sub, .contact-copy p, .sim-note, .slider-hint', 'fade-up'],
+  ['.sec-head .ulink', 'fade-left'],
+  ['.cta-band p', 'fade-right'], ['.cta-band .btn', 'fade-left'],
+  ['.stats > div', 'fade-up'], ['.lead > *', 'fade-up'],
+  ['.hero-sub, .ctas', 'none'], ['footer > *', 'fade']
+];
+AUTO.forEach(([sel, a, sp]) => $$(sel).forEach(el => {
+  if (el.closest('#catView, .rv, .hero, .menu') || el.hasAttribute('data-anim')) return;
+  el.dataset.anim = a; if (sp) el.dataset.split = sp;
+}));
+const splitWords = el => { // wrap each word in a masked span, keep inline tags like <em>/<br>
+  const walk = n => [...n.childNodes].forEach(c => {
+    if (c.nodeType === 3 && c.textContent.trim()) {
+      const f = document.createDocumentFragment();
+      c.textContent.split(/(\s+)/).forEach(t => { if (!t) return; if (/^\s+$/.test(t)) { f.append(t); return; }
+        const o = document.createElement('span'); o.className = 'aw'; const i = document.createElement('span'); i.className = 'ai'; i.textContent = t; o.append(i); f.append(o); });
+      c.replaceWith(f);
+    } else if (c.nodeType === 1 && c.tagName !== 'BR' && !c.classList.contains('aw')) walk(c);
+  });
+  walk(el); return el.querySelectorAll('.ai');
+};
+const OFF = { 'fade': {}, 'fade-up': { y: 40 }, 'fade-down': { y: -40 }, 'fade-left': { x: 48 }, 'fade-right': { x: -48 } };
+const anims = $$('[data-anim]').filter(el => el.dataset.anim !== 'none');
+if (!reduce && window.ScrollTrigger) anims.forEach(el => {
+  try {
+    const d = parseFloat(el.dataset.delay) || 0, st = { trigger: el, start: 'top 90%', once: true };
+    if (el.dataset.split === 'words') {
+      const w = splitWords(el);
+      gsap.from(w, { yPercent: 110, opacity: 0, duration: 1, ease: 'expo.out', stagger: 0.05, delay: d, scrollTrigger: st, clearProps: 'transform,opacity' });
+    } else gsap.from(el, { ...(OFF[el.dataset.anim] || {}), opacity: 0, duration: 1, ease: 'expo.out', delay: d, scrollTrigger: st, clearProps: 'transform,opacity' });
+  } catch (e) { el.style.opacity = ''; el.style.transform = ''; }
+});
+// safety net: anything still hidden 1.2s after it scrolled into view (or if ScrollTrigger failed) is forced visible
+const unhide = () => anims.forEach(el => { const r = el.getBoundingClientRect(); if (r.top < innerHeight && r.bottom > 0) [el, ...el.querySelectorAll('.ai')].forEach(n => { if (getComputedStyle(n).opacity === '0') gsap.set(n, { clearProps: 'all' }); }); });
+let uhT; addEventListener('scroll', () => { clearTimeout(uhT); uhT = setTimeout(unhide, 1200); }, { passive: true });
+setTimeout(unhide, 4000);
+document.fonts && document.fonts.ready.then(() => ScrollTrigger.refresh());
 
 // ---------- category cards -> full-screen category view (clip-path wipe from the card, history-aware) ----------
 const CATS = window.CATEGORIES || [], catList = $('#catList'), cv = $('#catView'), cvBody = $('#cvBody');

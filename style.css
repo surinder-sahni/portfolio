@@ -354,3 +354,58 @@ footer{display:flex;justify-content:space-between;margin-top:90px;padding-top:24
 @media (max-width:900px){
  .cat{grid-template-columns:54px 1fr auto}.cat-m b{display:none}.cat-m i{width:44px;height:44px}
 }
+/* ===== v10: v1 fonts (Space Grotesk display/headings, Inter body) ===== */
+:root{--disp:'Space Grotesk',system-ui,sans-serif;--serif:'Space Grotesk',system-ui,sans-serif;--sans:'Inter',system-ui,sans-serif}
+em{font-family:var(--disp);font-style:normal;font-weight:500;letter-spacing:inherit}
+.mega,.h2,.mega-2,.big-cta,.pcard h3,.success h3,.sm-title span,.track span,.menu nav a{font-weight:700;letter-spacing:-.045em}
+.mega{font-size:clamp(56px,12.4vw,210px);line-height:.88}
+.h2{font-size:clamp(36px,5.4vw,88px);line-height:.95}
+.h2-serif{font-weight:600;font-size:clamp(38px,5.6vw,92px);letter-spacing:-.04em;line-height:.98}
+.mega-2{font-size:clamp(58px,12vw,200px);line-height:.88}
+.big-cta{font-size:clamp(44px,9.6vw,170px);line-height:.9}
+.pcard h3{font-size:clamp(34px,3.8vw,64px)}
+.stats strong{font-weight:500;letter-spacing:-.05em;font-size:clamp(48px,6.4vw,104px)}
+.track span{font-size:clamp(44px,6.6vw,110px)}
+.sim-big{font-weight:600;letter-spacing:-.05em;font-size:clamp(64px,9vw,150px)}
+.rv-n{font-weight:700;letter-spacing:-.06em;font-size:clamp(80px,12vw,190px)}
+.rv-main p,.cta-band p,.slide figcaption b,.cat-t strong,.ex-plaque b,.ex-card p,.cv-head h2{font-style:normal;letter-spacing:-.025em;font-weight:500}
+.rv-main p{font-size:clamp(22px,2.6vw,40px);line-height:1.2}
+.cta-band p{font-size:clamp(22px,2.4vw,36px)}
+.cat-n,.ex-card .n,.rn{font-weight:500;letter-spacing:-.04em}
+.cat-t strong{font-size:clamp(24px,3.4vw,54px)}
+.logo{font-weight:700;letter-spacing:-.04em}
+.reveal-text{letter-spacing:-.025em}
+.menu nav a{font-size:clamp(44px,12vw,100px)}
+.pre-count{font-weight:700;letter-spacing:-.06em}
+/* reveal words */
+.aw{display:inline-block;overflow:hidden;vertical-align:top;padding-bottom:.08em;margin-bottom:-.08em}.ai{display:inline-block}
+/* desktop tidy: one rhythm */
+section{padding-block:clamp(90px,10vw,150px)}
+.hero{padding-top:120px;padding-bottom:60px}.intro{padding-top:60px}
+.sim{padding-block:clamp(60px,7vw,110px)}
+.cats{padding-block:clamp(80px,9vw,140px)}
+.stack{padding:40px 0}
+.contact-grid{margin-top:clamp(40px,5vw,70px)}
+footer{margin-top:clamp(50px,6vw,90px)}
+/* ===== v10: mobile spacing ===== */
+@media (max-width:768px){
+ section{padding:72px 20px}
+ .sec-head{margin-bottom:24px}
+ .h2,.h2-serif{margin-top:12px;font-size:clamp(34px,10vw,44px)}
+ .hero{padding-top:104px;padding-bottom:96px}.hero-top{margin-bottom:22px}.hero-bottom{margin-top:24px;padding-top:20px;gap:22px}
+ .mega{font-size:clamp(50px,15.2vw,64px)}
+ .intro{padding-top:40px;padding-bottom:56px}
+ .services{gap:24px;padding-top:56px}.svc-head .h2{font-size:clamp(34px,10vw,44px)}.svc-sub{margin:16px 0 20px;font-size:16px}
+ .deck{padding-bottom:20px}.pcard{margin-bottom:5vh;min-height:400px}.pcard-in{min-height:400px}
+ .sim{padding-block:56px}.sim-card{padding:22px}.sim-grid{gap:24px;margin-top:24px}.sim-big{font-size:64px;margin:6px 0 16px}
+ .work{padding-block:64px}.slider.stacked .rail{gap:32px;padding-top:12px}
+ .cta-band{margin-top:40px;padding:24px 20px;gap:16px}
+ .cats{padding-block:64px}.cat-list{margin-top:20px}.cat{padding:18px 0}.cat-t strong{font-size:26px}.cat-n{font-size:34px}
+ .results{padding-block:64px}.stats>div{padding:22px 12px 14px 0}.stats strong{font-size:44px}
+ .stack{padding:24px 0}.track span{font-size:44px}
+ .reviews{padding-block:64px}.mega-2{font-size:clamp(52px,15vw,64px);margin-top:12px}
+ .rv{margin-bottom:3vh;padding:22px;top:76px}.rv-main{gap:20px}.rv-n{font-size:64px}.rv-main p{font-size:20px}
+ .contact{padding-top:64px;padding-bottom:24px}.big-cta{font-size:clamp(36px,10.2vw,46px)}
+ .contact-grid{margin-top:28px;gap:28px}.contact-copy p{font-size:17px;margin-bottom:16px}
+ footer{margin-top:44px;margin-bottom:84px;padding-top:18px}
+}
