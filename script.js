@@ -286,7 +286,7 @@ document.fonts && document.fonts.ready.then(() => ScrollTrigger.refresh());
 
 // ---------- category cards -> full-screen category view (clip-path wipe from the card, history-aware) ----------
 const CATS = window.CATEGORIES || [], catList = $('#catList'), cv = $('#catView'), cvBody = $('#cvBody');
-const catProjects = c => c.match ? P.map((p, i) => [p, i]).filter(([p]) => (p.category + ' ' + p.niche).includes(c.match)) : [];
+const catProjects = c => P.map((p, i) => [p, i]).filter(([p]) => (p.categories || []).includes(c.key));
 catList.innerHTML = CATS.map((c, k) => { const n = catProjects(c).length;
   return `<button class="cat" type="button" data-cat="${k}" aria-haspopup="dialog"><span class="cat-n">${c.num}</span><span class="cat-t"><strong>${c.title}</strong><em>${c.line}</em></span><span class="cat-m"><b>${n ? n + ' projects' : 'Service'}</b><i>→</i></span></button>`; }).join('');
 if (!reduce) gsap.from('.cat', { y: 40, opacity: 0, duration: 1, ease: 'expo.out', stagger: 0.1, scrollTrigger: { trigger: catList, start: 'top 85%', once: true } });
@@ -299,11 +299,11 @@ function renderCat(c) {
   $('#cvNum').textContent = c.num; $('#cvTitle').textContent = c.title;
   $('#cvKick').textContent = items.length ? 'The studio' : 'The service';
   $('.cv-hint').textContent = items.length ? 'Scroll to walk the studio' : 'Scroll to walk through it';
-  const html = items.length
-    ? items.map(([p, i]) => exWrap(`<div class="ex-bar"><i></i><i></i><i></i><span></span></div><div class="ex-shot"><img src="${p.cover || p.full}" alt="${p.title} website" loading="lazy" draggable="false"></div>`,
+  const pts = c.points || [];
+  const html = items.map(([p, i]) => exWrap(`<div class="ex-bar"><i></i><i></i><i></i><span></span></div><div class="ex-shot"><img src="${p.cover || p.full}" alt="${p.title} website" loading="lazy" draggable="false"></div>`,
         `<div class="ex-plaque"><b>${p.title}</b><small>${p.niche} · ${p.category}</small><button class="ex-btn" type="button" data-open="${i}">View full site <i>↗</i></button></div>`))
-    : (c.points || []).map((x, k) => exWrap(`<div class="ex-card"><span class="n">${['I','II','III','IV','V','VI'][k]}</span><p>${x}</p></div>`, `<div class="ex-plaque"><b>${c.title}</b><small>What's included · ${k + 1} of ${c.points.length}</small></div>`))
-      .concat(exWrap(`<div class="ex-card cta"><span class="n">→</span><p>Case studies are on the way. Let's talk about yours.</p><a href="#contact" class="btn" data-cv-cta data-snd><span>Book a free strategy call</span><i>→</i></a></div>`, `<div class="ex-plaque"><b>Your project, next</b><small>Free 30-min call</small></div>`));
+    .concat(pts.map((x, k) => exWrap(`<div class="ex-card"><span class="n">${['I','II','III','IV','V','VI'][k]}</span><p>${x}</p></div>`, `<div class="ex-plaque"><b>${c.title}</b><small>What's included · ${k + 1} of ${pts.length}</small></div>`)))
+    .concat(exWrap(`<div class="ex-card cta"><span class="n">→</span><p>${items.length ? 'Want one like these?' : 'Case studies are on the way.'} Let's talk about yours.</p><a href="#contact" class="btn" data-cv-cta data-snd><span>Book a free strategy call</span><i>→</i></a></div>`, `<div class="ex-plaque"><b>Your project, next</b><small>Free 30-min call</small></div>`));
   cvRow.innerHTML = html.join('');
   cvEx = $$('.ex', cvRow); $('#cvTot').textContent = pad2(cvEx.length); $('#cvTrack').style.setProperty('--n', cvEx.length);
 }
@@ -412,6 +412,7 @@ if (!reduce) {
 if (!reduce) gsap.from('.ut-badge', { y: -16, opacity: 0, duration: 1, ease: 'expo.out', delay: 1.1, clearProps: 'opacity,transform' });
 if (!mobile) ScrollTrigger.create({ trigger: '.hero', start: 'top top', end: '45% top', onToggle: st => $('.floaters').classList.toggle('in-hero', st.isActive) });
 const UP = (window.SITE_CONFIG || {}).UPWORK_URL; if (UP) { const bd = $('.ut-badge'); bd.href = UP; bd.target = '_blank'; bd.rel = 'noopener'; }
+if (UP) $$('[data-upwork]').forEach(a => a.href = UP);
 ScrollTrigger.create({ trigger: '#contact', start: 'top 70%', end: 'bottom top', onToggle: st => $('.floaters').classList.toggle('hide', st.isActive) });
 
 // ---------- lead form (frontend; set FORM_ENDPOINT in projects.js to go live) ----------
