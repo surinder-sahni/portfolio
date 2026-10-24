@@ -439,4 +439,63 @@ form.addEventListener('submit', async e => {
 });
 
 addEventListener('load', () => ScrollTrigger.refresh());
+
+// ---------- Hero: hanging ID card (pendulum physics, canvas lanyard, flip on tap) ----------
+(() => {
+  const stage = $('#idcStage'), pend = $('#idcPend'), card = $('#idcCard'), inner = $('#idcInner'), cv = $('#idcStrap');
+  if (!stage) return;
+  const qr = $('.idc-qr'); let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const cells = []; for (let y = 0; y < 21; y++) for (let x = 0; x < 21; x++) { const f = (x < 7 && y < 7) || (x > 13 && y < 7) || (x < 7 && y > 13);
+    const fin = f && (((x % 14) === 0 || (x % 14) === 6 || y % 14 === 0 || y % 14 === 6) || ((x % 14) > 1 && (x % 14) < 5 && (y % 14) > 1 && (y % 14) < 5));
+    if (f ? fin : rnd() > 0.52) cells.push(`<rect x="${x}" y="${y}" width="1" height="1"/>`); }
+  qr.innerHTML = `<svg viewBox="0 0 21 21" shape-rendering="crispEdges">${cells.join('')}</svg>`;
+  const ctx = cv.getContext('2d'); let W, H, L, dpr;
+  const st = { th: 0.0, w: 0, thm: 0, flip: 0, drag: false, lastT: 0, vis: false };
+  const size = () => { dpr = Math.min(devicePixelRatio || 1, 2); W = stage.clientWidth; H = stage.clientHeight; L = parseFloat(getComputedStyle(stage).getPropertyValue('--L')) || 260;
+    cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + 'px'; cv.style.height = H + 'px'; };
+  size(); addEventListener('resize', size);
+  const drawStrap = () => {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    const ax = W / 2, ex = ax - Math.sin(st.th) * L, ey = Math.cos(st.th) * L;
+    const mx = ax - Math.sin(st.thm) * L * 0.5, my = Math.cos(st.thm) * L * 0.5 + 6;
+    for (const [off, col, wd] of [[0, '#7a3a17', 20], [0, '#d4703a', 16]]) { ctx.beginPath(); ctx.moveTo(ax, -10); ctx.quadraticCurveTo(mx * 2 - (ax + ex) / 2, my * 2 - (ey - 10) / 2, ex, ey - 14);
+      ctx.strokeStyle = col; ctx.lineWidth = wd; ctx.lineCap = 'butt'; ctx.stroke(); }
+    ctx.setLineDash([4, 5]); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(255,230,200,.45)';
+    ctx.beginPath(); ctx.moveTo(ax, -10); ctx.quadraticCurveTo(mx * 2 - (ax + ex) / 2, my * 2 - (ey - 10) / 2, ex, ey - 14); ctx.stroke(); ctx.setLineDash([]);
+  };
+  const render = () => {
+    const twist = Math.max(-25, Math.min(25, st.w * 9));
+    pend.style.transform = `rotate(${st.th}rad)`;
+    const ang = (st.flip + twist) * Math.PI / 180, c = Math.cos(ang);
+    inner.style.transform = `scaleX(${Math.max(0.02, Math.abs(c)).toFixed(4)}) skewY(${(Math.sin(ang) * (c < 0 ? -6 : 6)).toFixed(2)}deg)`; // 2D flip: no WebKit 3D bugs
+    const isBack = Math.cos((st.flip + twist) * Math.PI / 180) < 0; if (isBack !== st.isBack) { st.isBack = isBack; inner.classList.toggle('is-back', isBack); }
+    drawStrap();
+  };
+  const tick = t => {
+    const dt = Math.min(0.033, (t - (st.lastT || t)) / 1000); st.lastT = t;
+    if (!st.drag && !reduce) { const a = -9.5 * Math.sin(st.th) - 0.9 * st.w; st.w += a * dt; st.w = Math.max(-6, Math.min(6, st.w)); st.th += st.w * dt; }
+    st.thm += (st.th - st.thm) * Math.min(1, dt * 9);
+    render(); if (st.vis) requestAnimationFrame(tick); else st.lastT = 0;
+  };
+  new IntersectionObserver(es => es.forEach(e => { const was = st.vis; st.vis = e.isIntersecting; if (st.vis && !was) { if (!st.entered) { st.entered = true; st.th = -0.35; st.w = 0.4; } requestAnimationFrame(tick); } })).observe(stage);
+  render();
+  // drag + tap
+  let sx = 0, sy = 0, moved = false, lastA = 0, lastTime = 0;
+  const angleAt = e => { const r = stage.getBoundingClientRect(); return -Math.atan2(e.clientX - (r.left + W / 2), Math.max(40, e.clientY - r.top)); };
+  card.addEventListener('pointerdown', e => { if (e.button > 0) return; e.preventDefault(); st.drag = true; moved = false; sx = e.clientX; sy = e.clientY; lastA = st.th; lastTime = performance.now(); card.setPointerCapture(e.pointerId); card.classList.add('grab'); });
+  card.addEventListener('pointermove', e => { if (!st.drag) return; if (Math.hypot(e.clientX - sx, e.clientY - sy) > 6) moved = true; if (!moved) return;
+    const a = Math.max(-1.2, Math.min(1.2, angleAt(e))), now = performance.now(), dtt = Math.max(1, now - lastTime) / 1000;
+    st.w = Math.max(-5, Math.min(5, (a - lastA) / Math.max(0.016, dtt) * 0.6)); st.th = a; lastA = a; lastTime = now; });
+  const flip = () => { gsap.to(st, { flip: st.flip >= 90 ? 0 : 180, duration: 0.9, ease: 'back.out(1.4)' }); st.w += (st.th > 0 ? -1 : 1) * 1.2; blip(st.flip >= 90 ? 520 : 780, 0.12, 0.04);
+    card.setAttribute('aria-label', st.flip >= 90 ? 'ID card front. Press to flip' : 'ID card back: services and contact. Press to flip'); };
+  const up = e => { if (!st.drag) return; st.drag = false; card.classList.remove('grab'); if (!moved && !e.target.closest('.idc-cta')) flip(); };
+  card.addEventListener('pointerup', up); card.addEventListener('pointercancel', () => { st.drag = false; card.classList.remove('grab'); });
+  card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); } });
+  // cursor proximity nudge
+  let pmx = null; stage.addEventListener('mousemove', e => { if (st.drag) return; if (pmx !== null) { const r = card.getBoundingClientRect(), d = Math.hypot(e.clientX - (r.left + r.width / 2), e.clientY - (r.top + r.height / 2));
+    if (d < 260) st.w += (e.clientX - pmx) * 0.0016 * (1 - d / 260); } pmx = e.clientX; });
+  stage.addEventListener('mouseleave', () => pmx = null);
+  window.__idc = st; // for testing
+})();
+
 })();

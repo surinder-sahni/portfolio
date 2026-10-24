@@ -418,3 +418,59 @@ footer{margin-top:clamp(50px,6vw,90px)}
  .hero .ctas{grid-template-columns:1fr;width:100%}.hero .ctas .btn{height:54px;font-size:13px}
  .floaters{gap:8px}.wa,.upw{width:50px;height:50px}.talk{padding-right:20px}
 }
+.idc-stage{--L:250px;--cw:290px;--ch:440px;position:relative;height:calc(var(--L) + var(--ch) + 70px);touch-action:pan-y}
+.idc-strap{position:absolute;inset:0;pointer-events:none}
+.idc-pend{position:absolute;left:50%;top:0;width:0;height:0;transform-origin:0 0;will-change:transform}
+.idc-card{position:absolute;top:var(--L);left:0;width:var(--cw);height:var(--ch);margin-left:calc(var(--cw) / -2);perspective:1100px;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;outline:0}
+.idc-card.grab{cursor:grabbing}
+.idc-card:focus-visible .idc-face{box-shadow:0 0 0 2px var(--acc),0 30px 60px rgba(0,0,0,.55)}
+.idc-clip{position:absolute;left:50%;top:-22px;width:30px;height:34px;margin-left:-15px;z-index:3;border-radius:6px 6px 4px 4px;background:linear-gradient(#c9c2b2,#8d8676);box-shadow:0 2px 4px rgba(0,0,0,.5)}
+.idc-clip i{position:absolute;left:9px;right:9px;top:6px;height:10px;border-radius:3px;background:#3a352c}
+.idc-inner{position:absolute;inset:0;transform-style:preserve-3d;-webkit-transform-style:preserve-3d;will-change:transform}
+.idc-face{position:absolute;inset:0;border-radius:18px;-webkit-backface-visibility:hidden;backface-visibility:hidden;overflow:hidden;padding:30px 22px 18px;display:flex;flex-direction:column;box-shadow:0 30px 60px rgba(0,0,0,.55);border:1px solid rgba(233,223,200,.14)}
+.idc-front{background:radial-gradient(120% 60% at 100% 0%,rgba(212,112,58,.35),transparent 60%),linear-gradient(160deg,#211d17,#14120e)}
+.idc-back{transform:rotateY(180deg);background:linear-gradient(200deg,#d4703a,#a44f22 70%,#7a3a17);color:#1b130c}
+.idc-hole{position:absolute;left:50%;top:10px;width:46px;height:9px;margin-left:-23px;border-radius:9px;background:#0b0a08;box-shadow:inset 0 1px 2px rgba(0,0,0,.8)}
+.idc-back .idc-hole{background:#4a230f}
+.idc-top{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+.idc-logo{font:700 18px var(--disp);letter-spacing:-.04em}.idc-logo b{color:var(--acc)}
+.idc-tag{font:600 9px var(--sans);letter-spacing:.22em;text-transform:uppercase;color:var(--acc);border:1px solid rgba(212,112,58,.5);border-radius:99px;padding:4px 8px}
+.idc-photo{margin:16px 0 14px;width:112px;height:132px;border-radius:12px;overflow:hidden;border:2px solid rgba(212,112,58,.7)}
+.idc-photo img{width:100%;height:100%;object-fit:cover;object-position:50% 30%;pointer-events:none}
+.idc-name{font:700 30px/.92 var(--disp);letter-spacing:-.045em;color:var(--ink)}
+.idc-role{margin-top:8px;font-size:12px;color:var(--beige)}
+.idc-badge{margin-top:10px;align-self:flex-start;display:inline-flex;align-items:center;gap:7px;font:600 10px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:#bfe9b3;background:rgba(20,168,0,.16);border:1px solid rgba(20,168,0,.45);padding:5px 10px;border-radius:99px}
+.idc-badge i{width:7px;height:7px;border-radius:50%;background:#14a800}
+.idc-foot{margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end}
+.idc-foot small{display:block;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute)}.idc-foot b{font:600 13px var(--disp);letter-spacing:.06em}
+.idc-sign{width:96px;color:var(--acc)}
+.idc-barcode{margin-top:10px;height:26px;border-radius:3px;background:repeating-linear-gradient(90deg,var(--ink) 0 2px,transparent 2px 4px,var(--ink) 4px 5px,transparent 5px 8px,var(--ink) 8px 11px,transparent 11px 12px);opacity:.85}
+.idc-k{margin-top:10px;font:600 10px var(--sans);letter-spacing:.24em;text-transform:uppercase;opacity:.75}
+.idc-list{list-style:none;margin-top:10px;font:600 15px/1.25 var(--disp);letter-spacing:-.02em}.idc-list li{padding:6px 0;border-bottom:1px solid rgba(27,19,12,.2)}
+.idc-qr{margin-top:14px;width:76px;height:76px;padding:6px;background:#f3e9d2;border-radius:8px}.idc-qr svg{width:100%;height:100%;fill:#1b130c}
+.idc-cta{margin-top:auto;display:block;text-align:center;background:#1b130c;color:#f3e9d2;border-radius:99px;padding:12px;font:600 12px var(--sans);letter-spacing:.12em;text-transform:uppercase}
+.idc-fine{margin-top:8px;font-size:9px;text-align:center;opacity:.6}
+.idc-front{transform:translateZ(1px)}.idc-back{transform:rotateY(180deg) translateZ(1px)}
+.idc-inner.is-back .idc-front,.idc-inner:not(.is-back) .idc-back{visibility:hidden}
+/* v12 flip is 2D (scaleX + face swap) to avoid WebKit 3D compositing bugs */
+.idc-inner{transform-style:flat;-webkit-transform-style:flat}
+.idc-front,.idc-back{transform:none;-webkit-backface-visibility:visible;backface-visibility:visible}
+.idc-stage,.idc-stage *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+/* v13: ID card hanging in hero's empty top-left */
+.hero{position:relative}
+.hero-idc{position:absolute;z-index:3;top:0;left:calc(24vw - 180px);width:360px;--L:110px;--cw:220px;--ch:330px;height:calc(var(--L) + var(--ch) + 40px)}
+.hero-idc .idc-face{padding:24px 18px 14px}.hero-idc .idc-photo{width:84px;height:100px;margin:12px 0 10px}.hero-idc .idc-name{font-size:23px}
+.hero-idc .idc-role{font-size:11px}.hero-idc .idc-list{font-size:12.5px}.hero-idc .idc-list li{padding:4px 0}.hero-idc .idc-qr{width:56px;height:56px;margin-top:10px}.hero-idc .idc-cta{padding:9px;font-size:10.5px}
+.hero-idc .idc-barcode{height:20px}
+.hero-idc .idc-cta{white-space:nowrap;letter-spacing:.06em}
+@media (min-width:901px) and (max-width:1200px){.hero-idc{--L:50px;--cw:190px;--ch:280px;left:calc(26vw - 180px)}}
+@media (max-width:900px){
+ .hero-idc{position:relative;order:5;left:auto;width:auto;margin:28px -20px -40px;overflow:hidden;overflow:clip;--L:60px;--cw:200px;--ch:300px}
+ .hero-idc::before{content:'';position:absolute;left:20px;right:20px;top:0;border-top:1px solid var(--line)}
+}
+.hero-idc .idc-photo,.hero-idc .idc-badge,.hero-idc .idc-barcode{flex:none}.hero-idc .idc-badge{white-space:nowrap;font-size:9px;letter-spacing:.1em}.hero-idc .idc-foot b{font-size:11px;white-space:nowrap}.hero-idc .idc-role{white-space:nowrap}.hero-idc .idc-sign{width:72px}
+.hero-idc .idc-face .idc-photo{width:70px;height:82px;margin:10px 0 8px}.hero-idc .idc-tag{white-space:nowrap;font-size:8px;letter-spacing:.16em;padding:3px 7px}.hero-idc .idc-logo{font-size:15px}.hero-idc .idc-name{font-size:21px}
+.hero-idc .idc-role{font-size:10px;margin-top:6px}.hero-idc .idc-badge{margin-top:8px}.hero-idc .idc-barcode{margin-top:8px;height:16px}
+/* v13b: breathing room under card on desktop */
+@media (min-width:1201px){.hero-idc{--L:68px}}
+@media (min-width:901px) and (max-width:1200px){.hero-idc{--L:36px}.hero-idc .idc-face{padding:22px 16px 12px}.hero-idc .idc-face .idc-photo{width:62px;height:72px;margin:8px 0 6px}.hero-idc .idc-name{font-size:19px}.hero-idc .idc-badge{margin-top:6px}}
